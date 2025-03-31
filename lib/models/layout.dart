@@ -5,7 +5,11 @@ class MainMenuTile {
   String title;
   Function onTap;
 
-  MainMenuTile({this.icon, this.title, this.onTap});
+  MainMenuTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
 }
 
 class HimnosListTile {
@@ -14,5 +18,10 @@ class HimnosListTile {
   bool expanded;
   List<HimnosListTile> subCategorias;
 
-  HimnosListTile({this.title, this.route, this.expanded = false, this.subCategorias = const []});
+  HimnosListTile({
+    required this.title,
+    required this.route,
+    this.expanded = false,
+    this.subCategorias = const [],
+  });
 }

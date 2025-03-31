@@ -5,33 +5,35 @@ import 'package:Himnario/helpers/isAndroid.dart';
 import 'package:Himnario/helpers/parseVersion.dart';
 import 'package:Himnario/models/himnos.dart';
 import 'package:flutter/services.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 
-String dbPath;
-
 class DB {
-  static Future<Null> init() async {
-    if (dbPath == null) {
+  static String? _dbPath;
+
+  static Future<String> _getPath() async {
+    if (_dbPath == null) {
       String databasesPath = (await getApplicationDocumentsDirectory()).path;
-      dbPath = databasesPath + "/himnos.db";
+      _dbPath = databasesPath + "/himnos.db";
     }
 
+    return _dbPath!;
+  }
+
+  static Future<Null> init() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String version = prefs.getString('version');
+    String? version = prefs.getString('version');
     String actualVersion = (await PackageInfo.fromPlatform()).version;
     print('actualVersion: $actualVersion');
     print('newVersion: $version');
     if (version == null || version != actualVersion) {
-      await copiarBase(dbPath, version == null, version == null ? 0.0 : parseVersion(version));
+      await copiarBase(await _getPath(), version == null, version == null ? 0.0 : parseVersion(version));
       prefs.setString('version', actualVersion);
-      prefs.setString('latest', null);
+      prefs.remove('latest');
     }
   }
-
-  static String path() => dbPath;
 
   static Future<Null> copiarBase(String dbPath, bool fistRun, double version) async {
     print('entro a copiar');
@@ -40,11 +42,11 @@ class DB {
     Database db;
 
     // Favoritos
-    List<int> favoritos = List<int>();
+    List<int> favoritos = [];
     // Descargados
-    List<List<int>> descargados = List<List<int>>();
+    List<List<int>> descargados = [];
     // transpose
-    List<Himno> transposedHImnos = List<Himno>();
+    List<Himno> transposedHImnos = [];
     if (!fistRun) {
       print('abriendo base de datos');
       try {
@@ -95,16 +97,16 @@ class DB {
     return null;
   }
 
-  static Future<Null> execute(String sql, [List<dynamic> arguments]) async {
-    Database db = await openDatabase(dbPath);
+  static Future<Null> execute(String sql, {List<dynamic>? arguments}) async {
+    Database db = await openDatabase(await _getPath());
 
     await db.execute(sql, arguments);
 
     await db.close();
   }
 
-  static dynamic rawQuery(String sql, [List<dynamic> arguments]) async {
-    Database db = await openDatabase(dbPath);
+  static dynamic rawQuery(String sql, {List<dynamic>? arguments}) async {
+    Database db = await openDatabase(await _getPath());
 
     dynamic res = await db.rawQuery(sql, arguments);
 
@@ -113,8 +115,8 @@ class DB {
     return res;
   }
 
-  static dynamic rawInsert(String sql, [List<dynamic> arguments]) async {
-    Database db = await openDatabase(dbPath);
+  static dynamic rawInsert(String sql, {List<dynamic>? arguments}) async {
+    Database db = await openDatabase(await _getPath());
 
     dynamic res = await db.rawInsert(sql, arguments);
 
@@ -123,8 +125,8 @@ class DB {
     return res;
   }
 
-  static dynamic rawDelete(String sql, [List<dynamic> arguments]) async {
-    Database db = await openDatabase(dbPath);
+  static dynamic rawDelete(String sql, {List<dynamic>? arguments}) async {
+    Database db = await openDatabase(await _getPath());
 
     dynamic res = await db.rawDelete(sql, arguments);
 

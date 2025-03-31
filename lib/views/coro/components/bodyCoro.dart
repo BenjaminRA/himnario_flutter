@@ -15,15 +15,15 @@ class BodyCoro extends StatefulWidget {
   final Function stopScroll;
 
   BodyCoro({
-    this.estrofas,
-    this.alignment,
-    this.acordes,
-    this.animation,
-    this.notation,
-    this.scrollController,
-    this.stopScroll,
-    this.initFontSizeLandscape,
-    this.initFontSizePortrait,
+    required this.estrofas,
+    required this.alignment,
+    required this.acordes,
+    required this.animation,
+    required this.notation,
+    required this.scrollController,
+    required this.stopScroll,
+    required this.initFontSizeLandscape,
+    required this.initFontSizePortrait,
   });
 
   @override
@@ -31,10 +31,10 @@ class BodyCoro extends StatefulWidget {
 }
 
 class _BodyCoroState extends State<BodyCoro> {
-  double fontSizePortrait;
-  double initFontSizePortrait;
-  double fontSizeLandscape;
-  double initFontSizeLandscape;
+  late double fontSizePortrait;
+  late double initFontSizePortrait;
+  late double fontSizeLandscape;
+  late double initFontSizeLandscape;
 
   @override
   void initState() {

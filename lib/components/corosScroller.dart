@@ -13,10 +13,10 @@ class CorosScroller extends StatefulWidget {
   final bool iPhoneX;
   final double iPhoneXBottomPadding;
   final bool buscador;
-  final Function onRefresh;
+  final Future<void> Function()? onRefresh;
 
   CorosScroller({
-    this.himnos,
+    required this.himnos,
     this.mensaje = '',
     this.buscador = false,
     this.iPhoneX = false,
@@ -29,10 +29,10 @@ class CorosScroller extends StatefulWidget {
 }
 
 class _CorosScrollerState extends State<CorosScroller> {
-  ScrollController scrollController;
+  late ScrollController scrollController;
   bool dragging = false;
-  double scrollPosition;
-  double iPhoneXPadding;
+  late double scrollPosition;
+  late double iPhoneXPadding;
 
   @override
   void initState() {
@@ -69,6 +69,7 @@ class _CorosScrollerState extends State<CorosScroller> {
   }
 
   Widget materialScroller() {
+    final TemaModel tema = TemaModel.of(context);
     int length = widget.himnos.length == 0 ? 1 : widget.himnos.length;
 
     return Stack(
@@ -80,6 +81,7 @@ class _CorosScrollerState extends State<CorosScroller> {
                     widget.mensaje,
                     textAlign: TextAlign.center,
                     textScaleFactor: 1.5,
+                    style: tema.getScaffoldTextStyle(context),
                   ),
                 ),
               )
@@ -89,18 +91,12 @@ class _CorosScrollerState extends State<CorosScroller> {
                 itemBuilder: (BuildContext context, int index) {
                   bool selected = (scrollPosition - 15) ~/ ((MediaQuery.of(context).size.height - 60 - 129) / length) == index;
 
-                  Color color = selected && dragging
-                      ? (Theme.of(context).brightness == Brightness.light
-                          ? Theme.of(context).primaryIconTheme.color
-                          : Theme.of(context).accentTextTheme.body1.color)
-                      : Theme.of(context).textTheme.subhead.color;
+                  Color color = selected && dragging ? tema.getScaffoldTextColor().withOpacity(0.8) : tema.getScaffoldTextColor();
 
                   return Column(
                     children: <Widget>[
                       Container(
-                        color: selected && dragging
-                            ? (Theme.of(context).brightness == Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor)
-                            : Theme.of(context).scaffoldBackgroundColor,
+                        color: selected && dragging ? tema.getAccentColor() : tema.getScaffoldBackgroundColor(),
                         child: ListTile(
                           onTap: () async {
                             await Navigator.push(
@@ -125,9 +121,7 @@ class _CorosScrollerState extends State<CorosScroller> {
                             child: Text(
                               ((widget.himnos[index].numero > 517 ? '' : '${widget.himnos[index].numero} - ') + '${widget.himnos[index].titulo}'),
                               softWrap: true,
-                              style: Theme.of(context).textTheme.subhead.copyWith(
-                                    color: color,
-                                  ),
+                              style: tema.getScaffoldTextStyle(context),
                             ),
                           ),
                           trailing: widget.himnos[index].descargado
@@ -193,11 +187,13 @@ class _CorosScrollerState extends State<CorosScroller> {
                     height: double.infinity,
                     width: 40.0,
                     child: CustomPaint(
-                      painter: SideScroller(context,
-                          himnos: widget.himnos,
-                          position: scrollPosition,
-                          dragging: dragging,
-                          numero: dragging ? (scrollPosition - 15) ~/ ((MediaQuery.of(context).size.height - 60 - 129) / length) : -1),
+                      painter: SideScroller(
+                        context,
+                        himnos: widget.himnos,
+                        position: scrollPosition,
+                        dragging: dragging,
+                        numero: dragging ? (scrollPosition - 15) ~/ ((MediaQuery.of(context).size.height - 60 - 129) / length) : -1,
+                      ),
                     ),
                   ),
                 ),
@@ -208,7 +204,7 @@ class _CorosScrollerState extends State<CorosScroller> {
   }
 
   Widget cupertinoScroller() {
-    final TemaModel tema = ScopedModel.of<TemaModel>(context);
+    final TemaModel tema = TemaModel.of(context);
     int length = widget.himnos.length == 0 ? 1 : widget.himnos.length;
 
     return Stack(
@@ -216,15 +212,13 @@ class _CorosScrollerState extends State<CorosScroller> {
         widget.himnos.isEmpty
             ? Container(
                 child: Center(
-                    child: Text(
-                  widget.mensaje,
-                  textScaleFactor: 1.5,
-                  textAlign: TextAlign.center,
-                  style: DefaultTextStyle.of(context).style.copyWith(
-                        color: ScopedModel.of<TemaModel>(context).getScaffoldTextColor(),
-                        fontFamily: ScopedModel.of<TemaModel>(context).font,
-                      ),
-                )),
+                  child: Text(
+                    widget.mensaje,
+                    textScaleFactor: 1.5,
+                    textAlign: TextAlign.center,
+                    style: tema.getScaffoldTextStyle(context),
+                  ),
+                ),
               )
             : SafeArea(
                 child: CustomScrollView(
@@ -380,7 +374,6 @@ class _CorosScrollerState extends State<CorosScroller> {
                           child: CustomPaint(
                             painter: SideScroller(
                               context,
-                              tema: tema,
                               himnos: widget.himnos,
                               position: scrollPosition,
                               dragging: dragging,
@@ -412,26 +405,25 @@ class _CorosScrollerState extends State<CorosScroller> {
 
 class SideScroller extends CustomPainter {
   double position;
-  Color textColor;
   bool dragging;
   BuildContext context;
   int numero;
-  Paint scrollBar;
   List<Himno> himnos;
   double iPhoneXPadding;
-  TemaModel tema;
+
+  late Color textColor;
+  late Paint scrollBar;
 
   SideScroller(
-    BuildContext context, {
-    this.position,
-    this.textColor,
-    this.dragging,
-    this.numero,
-    this.himnos,
-    this.iPhoneXPadding,
-    this.tema,
+    this.context, {
+    required this.position,
+    required this.dragging,
+    required this.numero,
+    required this.himnos,
+    this.iPhoneXPadding = 0.0,
   }) {
     if (!isAndroid()) {
+      final TemaModel tema = TemaModel.of(context);
       textColor = tema.brightness == Brightness.light ? Colors.white : tema.getTabTextColor();
       scrollBar = Paint()
         ..color = dragging

@@ -9,8 +9,10 @@ screenshots/
 build/
 
 .flutter-plugins
-.fvm/flutter_sdk
 android/key.properties
 .flutter-plugins-dependencies
 fastlane-user.json
 himnario.jks
+
+# FVM Version Cache
+.fvm/

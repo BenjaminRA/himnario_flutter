@@ -16,9 +16,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:scoped_model/scoped_model.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:screen/screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import './components/bodyHimno.dart';
 import 'components/botonVoz.dart';
@@ -30,98 +30,77 @@ class HimnoPage extends StatefulWidget {
   final int numero;
   final String titulo;
 
-  HimnoPage({this.numero, this.titulo});
+  HimnoPage({
+    required this.numero,
+    required this.titulo,
+  });
 
   @override
   _HimnoPageState createState() => _HimnoPageState();
 }
 
 class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMixin {
-  // Voices Variables
-  AnimationController switchModeController;
-  StreamSubscription positionSubscription;
-  StreamSubscription completeSubscription;
-  PhotoViewScaleStateController scaleController;
-  List<AudioPlayer> audioVoces;
-  List<String> stringVoces;
-  int currentVoice;
-  bool modoVoces;
-  bool start;
-  double currentProgress;
-  Duration currentDuration;
-  int totalDuration;
-  bool vozDisponible;
-  bool cargando;
-  bool descargado;
-  int max;
-  int doneCount;
-  HttpClient cliente;
+  late AnimationController switchModeController;
+  late StreamSubscription positionSubscription;
+  late StreamSubscription completeSubscription;
+  late PhotoViewScaleStateController scaleController;
+
+  late int totalDuration;
+
+  List<AudioPlayer> audioVoces = [new AudioPlayer(), new AudioPlayer(), new AudioPlayer(), new AudioPlayer(), new AudioPlayer()];
+  List<String> stringVoces = ['Soprano', 'Tenor', 'ContraAlto', 'Bajo', 'Todos'];
+  int currentVoice = 4;
+  bool modoVoces = false;
+  bool start = false;
+  bool vozDisponible = false;
+  bool cargando = true;
+  bool descargado = false;
+  int max = 0;
+  int doneCount = 0;
+  double currentProgress = 0.0;
+  Duration currentDuration = Duration();
+  HttpClient? cliente = HttpClient();
 
   // Lyrics Variables
-  List<Parrafo> estrofas;
-  List<File> archivos;
-  bool favorito;
-  bool acordes;
-  double initFontSizePortrait;
-  double initFontSizeLandscape;
-  double initposition;
-  Database db;
-  String tema;
-  int temaId;
-  String subTema;
+  bool favorito = false;
+  List<Parrafo> estrofas = [];
+  List<File?> archivos = [null, null, null, null, null];
+  bool acordes = false;
+  double initFontSizePortrait = 16.0;
+  double initFontSizeLandscape = 16.0;
+  late Database db;
+  String tema = '';
+  String subTema = '';
+  int temaId = 1;
 
-  SharedPreferences prefs;
+  SharedPreferences? prefs;
 
   // Sheet variables
-  bool sheet;
-  bool sheetReady;
-  bool sheetAvailable;
-  File sheetFile;
-  PhotoViewController sheetController;
-  Orientation currentOrientation;
+  bool sheet = false;
+  bool sheetReady = false;
+  bool sheetAvailable = false;
+  File sheetFile = File('/a.jpg');
+  PhotoViewController sheetController = PhotoViewController();
+  Orientation? currentOrientation;
 
   @override
   void initState() {
-    max = 0;
-    Screen.keepOn(true);
-    acordes = false;
-    cliente = HttpClient();
-    descargado = false;
-    cargando = true;
-    archivos = List<File>(5);
-    stringVoces = ['Soprano', 'Tenor', 'ContraAlto', 'Bajo', 'Todos'];
-    audioVoces = [AudioPlayer(), AudioPlayer(), AudioPlayer(), AudioPlayer(), AudioPlayer()];
-    modoVoces = false;
-    start = false;
-    vozDisponible = false;
-    favorito = false;
-    initFontSizePortrait = 16.0;
-    initFontSizeLandscape = 16.0;
-    currentDuration = Duration();
+    WakelockPlus.enable();
+
     switchModeController = AnimationController(duration: Duration(milliseconds: 200), vsync: this)
       ..addListener(() {
         setState(() {});
       });
+
     scaleController = PhotoViewScaleStateController()
       ..addIgnorableListener(() {
         if (scaleController.scaleState == PhotoViewScaleState.covering) {
           scaleController.scaleState = PhotoViewScaleState.originalSize;
         }
       });
-    doneCount = 0;
-    currentVoice = 4;
-    estrofas = List<Parrafo>();
-    currentProgress = 0.0;
-    tema = subTema = '';
+
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarBrightness: Brightness.light, statusBarIconBrightness: Brightness.light));
     getHimno();
-
-    // Sheet init
-    sheet = false;
-    sheetAvailable = false;
-    sheetFile = File('/a.jpg');
-    sheetController = PhotoViewController();
-    sheetReady = false;
 
     super.initState();
   }
@@ -154,14 +133,19 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
     String path = (await getApplicationDocumentsDirectory()).path;
     if (cliente != null && mounted)
       for (int i = 0; i < audioVoces.length; ++i) {
-        int success = -1;
+        bool success = false;
 
         if (File(path + '/${widget.numero}-${stringVoces[i]}.mp3').existsSync()) {
-          success = await audioVoces[i].setUrl(path + '/${widget.numero}-${stringVoces[i]}.mp3', isLocal: true);
+          try {
+            await audioVoces[i].setSourceDeviceFile(path + '/${widget.numero}-${stringVoces[i]}.mp3');
+            success = true;
+          } catch (e) {
+            success = false;
+          }
         }
 
-        while (success != 1) {
-          http.Response res = await http.get(VoicesApi.voiceAvailable(widget.numero));
+        while (!success) {
+          http.Response res = await http.get(Uri.parse(VoicesApi.voiceAvailable(widget.numero)));
           if (res.statusCode == 404) {
             return null;
           }
@@ -171,17 +155,23 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
           Uint8List bytes = await consolidateHttpClientResponseBytes(response);
           File archivo = File(path + '/${widget.numero}-${stringVoces[i]}.mp3');
           await archivo.writeAsBytes(bytes);
-          success = await audioVoces[i].setUrl(path + '/${widget.numero}-${stringVoces[i]}.mp3', isLocal: true);
+
+          try {
+            await audioVoces[i].setSourceDeviceFile(path + '/${widget.numero}-${stringVoces[i]}.mp3');
+            success = true;
+          } catch (e) {
+            success = false;
+          }
         }
-        await audioVoces[i].setReleaseMode(ReleaseMode.STOP);
+        await audioVoces[i].setReleaseMode(ReleaseMode.stop);
       }
-    positionSubscription = audioVoces[4].onAudioPositionChanged.listen((Duration duration) {
+    positionSubscription = audioVoces[4].onPositionChanged.listen((Duration duration) {
       setState(() {
         currentProgress = duration.inMilliseconds / totalDuration;
         currentDuration = duration;
       });
     });
-    completeSubscription = audioVoces[4].onPlayerCompletion.listen((_) {
+    completeSubscription = audioVoces[4].onPlayerComplete.listen((_) {
       setState(() {
         start = false;
         currentProgress = 0.0;
@@ -200,19 +190,19 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
       if (await aux.exists()) {
         if (mounted) setState(() => sheetAvailable = true);
       } else {
-        http.Response res = await http.get(SheetsApi.sheetAvailable(widget.numero));
+        http.Response res = await http.get(Uri.parse(SheetsApi.sheetAvailable(widget.numero)));
         if (res.statusCode == 200) {
           if (mounted) setState(() => sheetAvailable = true);
-          http.Response image = await http.get(SheetsApi.getSheet(widget.numero));
+          http.Response image = await http.get(Uri.parse(SheetsApi.getSheet(widget.numero)));
           await aux.writeAsBytes(image.bodyBytes);
         }
       }
     } else {
-      http.Response res = await http.get(SheetsApi.sheetAvailable(widget.numero));
+      http.Response res = await http.get(Uri.parse(SheetsApi.sheetAvailable(widget.numero)));
       print(res.statusCode);
       if (res.statusCode == 200) {
         if (mounted) setState(() => sheetAvailable = true);
-        http.Response image = await http.get(SheetsApi.getSheet(widget.numero));
+        http.Response image = await http.get(Uri.parse(SheetsApi.getSheet(widget.numero)));
         await aux.writeAsBytes(image.bodyBytes);
       }
     }
@@ -265,7 +255,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
     });
 
     if (descargadoQuery.isEmpty && mounted) {
-      http.get(VoicesApi.voiceAvailable(widget.numero)).then((res) {
+      http.get(Uri.parse(VoicesApi.voiceAvailable(widget.numero))).then((res) {
         if (res.statusCode == 200) {
           initVoces();
           setState(() => vozDisponible = true);
@@ -283,7 +273,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
     setState(() => cargando = true);
     String path = (await getApplicationDocumentsDirectory()).path;
     List<bool> done = [false, false, false, false, false];
-    cliente
+    cliente!
         .getUrl(Uri.parse(VoicesApi.getVoiceDuration(widget.numero, 'Soprano')))
         .then((request) => request.close())
         .then((response) => consolidateHttpClientResponseBytes(response))
@@ -291,13 +281,13 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
       totalDuration = (double.parse(Utf8Decoder().convert(bytes)) * 1000).ceil();
     });
     for (int i = 0; i < audioVoces.length; ++i) {
-      cliente
+      cliente!
           .getUrl(Uri.parse(VoicesApi.getVoice(widget.numero, stringVoces[i])))
           .then((request) => request.close())
           .then((response) => consolidateHttpClientResponseBytes(response))
           .then((bytes) async {
         archivos[i] = File(path + '/${widget.numero}-${stringVoces[i]}.mp3');
-        await archivos[i].writeAsBytes(bytes);
+        await archivos[i]!.writeAsBytes(bytes);
         done[i] = true;
         if (mounted) setState(() => ++doneCount);
       });
@@ -309,19 +299,26 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
 
     if (cliente != null && mounted)
       for (int i = 0; i < audioVoces.length; ++i) {
-        int success = await audioVoces[i].setUrl(path + '/${widget.numero}-${stringVoces[i]}.mp3', isLocal: true);
-        while (success != 1) {
-          success = await audioVoces[i].setUrl(path + '/${widget.numero}-${stringVoces[i]}.mp3', isLocal: true);
+        bool success = false;
+        while (!success) {
+          try {
+            await audioVoces[i].setSourceDeviceFile(path + '/${widget.numero}-${stringVoces[i]}.mp3');
+            success = true;
+          } catch (e) {
+            success = false;
+          }
         }
-        await audioVoces[i].setReleaseMode(ReleaseMode.STOP);
+
+        await audioVoces[i].setReleaseMode(ReleaseMode.stop);
       }
-    positionSubscription = audioVoces[4].onAudioPositionChanged.listen((Duration duration) {
+
+    positionSubscription = audioVoces[4].onPositionChanged.listen((Duration duration) {
       setState(() {
         currentProgress = duration.inMilliseconds / totalDuration;
         currentDuration = duration;
       });
     });
-    completeSubscription = audioVoces[4].onPlayerCompletion.listen((_) {
+    completeSubscription = audioVoces[4].onPlayerComplete.listen((_) {
       setState(() {
         start = false;
         currentProgress = 0.0;
@@ -333,7 +330,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
     } else {
       for (int i = 0; i < audioVoces.length; ++i) {
         audioVoces[i].release();
-        if (archivos[i] != null && !descargado) if (archivos[i].existsSync()) archivos[i].deleteSync();
+        if (archivos[i] != null && !descargado) if (archivos[i]!.existsSync()) archivos[i]!.deleteSync();
       }
     }
     return null;
@@ -362,14 +359,14 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
     super.dispose();
     sheetController.dispose();
     switchModeController.dispose();
-    Screen.keepOn(false);
+    WakelockPlus.disable();
     cliente = null;
     if (vozDisponible) {
       if (archivos[0] == null && !descargado) deleteVocesFiles();
       if (sheetFile.existsSync() && !descargado) sheetFile.deleteSync();
       for (int i = 0; i < audioVoces.length; ++i) {
         audioVoces[i].release();
-        if (archivos[i] != null && !descargado) if (archivos[i].existsSync()) archivos[i].deleteSync();
+        if (archivos[i] != null && !descargado) if (archivos[i]!.existsSync()) archivos[i]!.deleteSync();
       }
     }
   }
@@ -409,39 +406,39 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
       await audioVoces[currentVoice].pause();
     }
     if (currentVoice == 4) {
-      positionSubscription = audioVoces[index].onAudioPositionChanged.listen((Duration duration) {
+      positionSubscription = audioVoces[index].onPositionChanged.listen((Duration duration) {
         setState(() {
           currentProgress = duration.inMilliseconds / totalDuration;
           currentDuration = duration;
         });
       });
-      completeSubscription = audioVoces[index].onPlayerCompletion.listen((_) {
+      completeSubscription = audioVoces[index].onPlayerComplete.listen((_) {
         setState(() {
           start = false;
           currentProgress = 0.0;
         });
       });
     } else if (currentVoice == index) {
-      positionSubscription = audioVoces[4].onAudioPositionChanged.listen((Duration duration) {
+      positionSubscription = audioVoces[4].onPositionChanged.listen((Duration duration) {
         setState(() {
           currentProgress = duration.inMilliseconds / totalDuration;
           currentDuration = duration;
         });
       });
-      completeSubscription = audioVoces[4].onPlayerCompletion.listen((_) {
+      completeSubscription = audioVoces[4].onPlayerComplete.listen((_) {
         setState(() {
           start = false;
           currentProgress = 0.0;
         });
       });
     } else {
-      positionSubscription = audioVoces[index].onAudioPositionChanged.listen((Duration duration) {
+      positionSubscription = audioVoces[index].onPositionChanged.listen((Duration duration) {
         setState(() {
           currentProgress = duration.inMilliseconds / totalDuration;
           currentDuration = duration;
         });
       });
-      completeSubscription = audioVoces[index].onPlayerCompletion.listen((_) {
+      completeSubscription = audioVoces[index].onPlayerComplete.listen((_) {
         setState(() {
           start = false;
           currentProgress = 0.0;
@@ -541,9 +538,10 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
                       controller: sheetController,
                       imageProvider: FileImage(sheetFile),
                       basePosition: Alignment.topCenter,
-                      scaleStateController: scaleController,
+                      // scaleStateControllerlate: scaleController,
                       initialScale: orientation == Orientation.portrait ? PhotoViewComputedScale.contained : PhotoViewComputedScale.covered,
-                      loadingChild: loadingChild,
+                      loadingBuilder: (context, _) => loadingChild,
+                      // loadingChild: loadingChild,
                       backgroundDecoration: BoxDecoration(
                         color: Colors.white,
                       ),
@@ -562,13 +560,13 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
         duration: totalDuration,
         onDragStart: cancelSubscription,
         onSelected: (double progress) {
-          positionSubscription = audioVoces[currentVoice].onAudioPositionChanged.listen((Duration duration) {
+          positionSubscription = audioVoces[currentVoice].onPositionChanged.listen((Duration duration) {
             setState(() {
               currentProgress = duration.inMilliseconds / totalDuration;
               currentDuration = duration;
             });
           });
-          completeSubscription = audioVoces[currentVoice].onPlayerCompletion.listen((_) {
+          completeSubscription = audioVoces[currentVoice].onPlayerComplete.listen((_) {
             setState(() {
               start = false;
               currentProgress = 0.0;
@@ -703,8 +701,8 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
           voz: labels[i],
           activo: currentVoice == i || currentVoice == 4,
           onPressed: () => toggleVoice(i),
-          mainColor: isAndroid() ? null : ScopedModel.of<TemaModel>(context).getAccentColor(),
-          mainColorContrast: isAndroid() ? null : ScopedModel.of<TemaModel>(context).getAccentColorText(),
+          mainColor: TemaModel.of(context).getAccentColor(),
+          mainColorContrast: TemaModel.of(context).getAccentColorText(),
         ),
       );
     }
@@ -795,7 +793,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
           body: Stack(
             children: <Widget>[
               BodyHimno(
-                alignment: prefs.getString('alignment'),
+                alignment: prefs!.getString('alignment') ?? 'Izquierda',
                 estrofas: estrofas,
                 initFontSizePortrait: initFontSizePortrait,
                 initFontSizeLandscape: initFontSizeLandscape,
@@ -823,7 +821,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
                   padding: EdgeInsets.only(bottom: smallDevice(context) ? switchModeController.value * 175 : switchModeController.value * 130),
                   child: FloatingActionButton(
                     key: UniqueKey(),
-                    backgroundColor: modoVoces ? Colors.redAccent : Theme.of(context).accentColor,
+                    backgroundColor: modoVoces ? Colors.redAccent : TemaModel.of(context).getAccentColor(),
                     onPressed: switchModes,
                     child: Stack(
                       children: <Widget>[
@@ -887,7 +885,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
       backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
         transitionBetweenRoutes: true,
-        actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
+        // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
         backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
         middle: Text(
           '${widget.numero} - ${widget.titulo}',
@@ -949,7 +947,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
                 Padding(
                   padding: EdgeInsets.only(bottom: switchModeController.value * (smallDevice(context) ? 185.0 : 140.0)),
                   child: BodyHimno(
-                      alignment: prefs.getString('alignment'),
+                      alignment: prefs!.getString('alignment') ?? 'Izquierda',
                       estrofas: estrofas,
                       initFontSizePortrait: initFontSizePortrait,
                       initFontSizeLandscape: initFontSizeLandscape,

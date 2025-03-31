@@ -15,32 +15,29 @@ import 'package:Himnario/models/himnos.dart';
 enum BuscadorType { Himnos, Coros, Todos }
 
 class Buscador extends StatefulWidget {
-  Buscador({
-    this.id,
-    this.subtema = false,
-    this.type = BuscadorType.Todos,
-  });
-
   final int id;
   final bool subtema;
   final BuscadorType type;
+
+  Buscador({
+    required this.id,
+    this.subtema = false,
+    this.type = BuscadorType.Todos,
+  });
 
   @override
   _BuscadorState createState() => _BuscadorState();
 }
 
 class _BuscadorState extends State<Buscador> {
-  List<Himno> himnos;
-  bool cargando;
-  String path;
-  Database db;
+  List<Himno> himnos = [];
+  bool cargando = true;
+  String path = '';
+  Database? db;
 
   @override
   void initState() {
     super.initState();
-    cargando = true;
-    himnos = List<Himno>();
-    path = '';
     fetchHimnos("");
   }
 
@@ -102,17 +99,17 @@ class _BuscadorState extends State<Buscador> {
   }
 
   Widget materialLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: TextField(
           autofocus: true,
           onChanged: fetchHimnos,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.title.color,
-            fontFamily: Theme.of(context).textTheme.title.fontFamily,
-            fontSize: 20.0,
-            fontWeight: FontWeight.w500,
-          ),
+          style: tema.getScaffoldTextStyle(context).copyWith(
+                fontSize: 20.0,
+                fontWeight: FontWeight.w500,
+              ),
           decoration: InputDecoration(filled: true, fillColor: Theme.of(context).canvasColor),
         ),
         bottom: PreferredSize(
@@ -149,7 +146,6 @@ class _BuscadorState extends State<Buscador> {
     return CupertinoPageScaffold(
       backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
-          actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
           backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
           middle: CupertinoTextField(
             autofocus: true,

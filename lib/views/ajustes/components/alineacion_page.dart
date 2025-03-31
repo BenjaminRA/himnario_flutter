@@ -1,4 +1,5 @@
 import 'package:Himnario/helpers/isAndroid.dart';
+import 'package:Himnario/models/tema.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,21 +10,19 @@ class AlineacionesPage extends StatefulWidget {
 }
 
 class AlineacionesPageState extends State<AlineacionesPage> {
-  List<List<dynamic>> alignments;
-  SharedPreferences prefs;
-  int value;
+  List<List<dynamic>> alignments = [
+    ['Izquierda', Icons.format_align_left],
+    ['Centro', Icons.format_align_center],
+    ['Derecha', Icons.format_align_right]
+  ];
+  SharedPreferences? prefs;
 
-  // iOS specific
-  int currentValue;
+  int? value;
+  int? currentValue;
 
   @override
   void initState() {
     super.initState();
-    alignments = [
-      ['Izquierda', Icons.format_align_left],
-      ['Centro', Icons.format_align_center],
-      ['Derecha', Icons.format_align_right]
-    ];
     initPrefs();
   }
 
@@ -33,22 +32,24 @@ class AlineacionesPageState extends State<AlineacionesPage> {
   }
 
   Widget materialLayout(BuildContext context) {
-    List<Widget> botones = List<Widget>();
+    List<Widget> botones = [];
     if (prefs != null)
       for (int i = 0; i < alignments.length; ++i) {
-        if (prefs.getString('alignment') == alignments[i][0]) value = i;
-        if (prefs.getString('alignment') == null && i == 0) value = i;
+        if (prefs!.getString('alignment') == alignments[i][0]) value = i;
+        if (prefs!.getString('alignment') == null && i == 0) value = i;
         botones.add(InkWell(
           onTap: () {
-            prefs.setString('alignment', alignments[i][0]);
+            prefs!.setString('alignment', alignments[i][0]);
             setState(() => value = i);
           },
           child: Row(
             children: <Widget>[
               Radio(
-                onChanged: (int e) {
-                  prefs.setString('alignment', alignments[i][0]);
-                  setState(() => value = e);
+                onChanged: (int? e) {
+                  if (e != null) {
+                    prefs!.setString('alignment', alignments[i][0]);
+                    setState(() => value = e);
+                  }
                 },
                 groupValue: value,
                 value: i,
@@ -67,11 +68,11 @@ class AlineacionesPageState extends State<AlineacionesPage> {
   }
 
   Widget cupertinoLayout(BuildContext context) {
-    List<Widget> botones = List<Widget>();
+    List<Widget> botones = [];
     if (prefs != null)
       for (int i = 0; i < alignments.length; ++i) {
-        if (prefs.getString('alignment') == alignments[i][0]) currentValue = i;
-        if (prefs.getString('alignment') == null && i == 0) currentValue = i;
+        if (prefs!.getString('alignment') == alignments[i][0]) currentValue = i;
+        if (prefs!.getString('alignment') == null && i == 0) currentValue = i;
 
         botones.add(CupertinoButton(
             onPressed: () => setState(() => value = i),
@@ -109,21 +110,21 @@ class AlineacionesPageState extends State<AlineacionesPage> {
         ),
       ),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           child: Text(
             'Cancelar',
-            style: TextStyle(color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black),
+            style: TemaModel.of(context).getButtonTextStyle(context),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        FlatButton(
+        TextButton(
           child: Text(
             'Guardar',
-            style: TextStyle(color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black),
+            style: TemaModel.of(context).getButtonTextStyle(context),
           ),
           onPressed: () {
             if (value != null) {
-              prefs.setString('alignment', alignments[value][0]);
+              prefs!.setString('alignment', alignments[value!][0]);
             }
             setState(() {});
             Navigator.of(context).pop();

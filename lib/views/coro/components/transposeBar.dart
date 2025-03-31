@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class TransposeBar extends StatelessWidget {
-  const TransposeBar({Key key}) : super(key: key);
+  const TransposeBar({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

@@ -7,27 +7,28 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:scoped_model/scoped_model.dart';
-import 'package:screen/screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import './components/bodyCoro.dart';
 
 class CoroPage extends StatefulWidget {
-  CoroPage({this.numero, this.titulo, this.transpose});
-
   final int numero;
   final String titulo;
   final int transpose;
+
+  CoroPage({
+    required this.numero,
+    required this.titulo,
+    required this.transpose,
+  });
 
   @override
   _CoroPageState createState() => _CoroPageState();
 }
 
 class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin {
-  AnimationController fontController;
   List<Parrafo> estrofas = [];
-  int transpose;
-  int totalDuration;
   bool acordesDisponible = false;
   bool cargando = true;
   bool favorito = false;
@@ -37,7 +38,11 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
   double initFontSizeLandscape = 16.0;
   bool descargado = false;
   int max = 0;
-  SharedPreferences prefs;
+  SharedPreferences? prefs;
+
+  late AnimationController fontController;
+  late int transpose;
+  late int totalDuration;
 
   // autoScroll Variables
   ScrollController scrollController = ScrollController();
@@ -56,7 +61,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
       ..addListener(() => setState(() {}));
 
     getHimno();
-    Screen.keepOn(true);
+    WakelockPlus.enable();
   }
 
   Future<Null> getHimno() async {
@@ -97,7 +102,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
   @override
   void dispose() async {
     super.dispose();
-    Screen.keepOn(false);
+    WakelockPlus.disable();
   }
 
   void toggleFavorito() async {
@@ -171,8 +176,8 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
   }
 
   void toggleNotation() {
-    String currentNotation = prefs.getString('notation') ?? 'latina';
-    prefs.setString('notation', currentNotation == 'latina' ? 'americana' : 'latina');
+    String currentNotation = prefs!.getString('notation') ?? 'latina';
+    prefs!.setString('notation', currentNotation == 'latina' ? 'americana' : 'latina');
 
     if (!transposeMode && fontController.value == 0.1) {
       fontController.animateTo(1.0, curve: Curves.linearToEaseOut);
@@ -210,13 +215,13 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
           stopScroll();
           setState(() => autoScroll = false);
         },
-        alignment: prefs.getString('alignment'),
+        alignment: prefs!.getString('alignment') ?? 'Izquierda',
         estrofas: estrofas,
         initFontSizePortrait: initFontSizePortrait,
         initFontSizeLandscape: initFontSizeLandscape,
         acordes: acordes,
         animation: fontController.value,
-        notation: prefs.getString('notation') ?? 'latino',
+        notation: prefs!.getString('notation') ?? 'latino',
       ),
     );
   }
@@ -225,17 +230,17 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
     Widget _materialBar() => ButtonBar(
           alignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            FlatButton.icon(
+            TextButton.icon(
               icon: Icon(Icons.arrow_drop_down),
               label: Text(smallDevice(context) ? '-' : 'Bajar Tono'),
               onPressed: () => applyTranspose(-1),
             ),
-            FlatButton.icon(
+            TextButton.icon(
               icon: Icon(Icons.arrow_drop_up),
               label: Text(smallDevice(context) ? '+' : 'Subir Tono'),
               onPressed: () => applyTranspose(1),
             ),
-            OutlineButton(
+            OutlinedButton(
               child: Text('Ok'),
               onPressed: () => setState(() => transposeMode = !transposeMode),
             )
@@ -367,14 +372,14 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
         child: ButtonBar(
           alignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            FlatButton(
+            TextButton(
               child: Icon(
                 Icons.fast_rewind,
                 color: !isAndroid() ? ScopedModel.of<TemaModel>(context).getTabTextColor() : null,
               ),
               onPressed: autoScrollSpeedUp,
             ),
-            FlatButton(
+            TextButton(
               child: Row(
                 children: <Widget>[
                   Icon(
@@ -391,7 +396,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
               ),
               onPressed: autoScrollPausePlay,
             ),
-            FlatButton(
+            TextButton(
               child: Icon(
                 Icons.fast_forward,
                 color: !isAndroid() ? ScopedModel.of<TemaModel>(context).getTabTextColor() : null,
@@ -448,10 +453,9 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                         leading: Icon(Icons.music_note),
                         title: Text(
                           (fontController.value == 1 ? 'Ocultar' : 'Mostrar') + ' Acordes',
-                          style: Theme.of(context)
-                              .textTheme
-                              .subhead
-                              .copyWith(color: acordesDisponible ? Theme.of(context).textTheme.subhead.color : Colors.grey),
+                          style: DefaultTextStyle.of(context).style.copyWith(
+                                color: acordesDisponible ? TemaModel.of(context).getScaffoldTextColor() : Colors.grey,
+                              ),
                         ),
                       )),
                   PopupMenuItem(
@@ -461,10 +465,9 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                         leading: Icon(Icons.unfold_more),
                         title: Text(
                           'Transponer',
-                          style: Theme.of(context)
-                              .textTheme
-                              .subhead
-                              .copyWith(color: acordesDisponible ? Theme.of(context).textTheme.subhead.color : Colors.grey),
+                          style: DefaultTextStyle.of(context).style.copyWith(
+                                color: acordesDisponible ? TemaModel.of(context).getScaffoldTextColor() : Colors.grey,
+                              ),
                         ),
                       )),
                   PopupMenuItem(
@@ -474,10 +477,9 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                         leading: Icon(Icons.undo),
                         title: Text(
                           'Tono Original',
-                          style: Theme.of(context)
-                              .textTheme
-                              .subhead
-                              .copyWith(color: acordesDisponible ? Theme.of(context).textTheme.subhead.color : Colors.grey),
+                          style: DefaultTextStyle.of(context).style.copyWith(
+                                color: acordesDisponible ? TemaModel.of(context).getScaffoldTextColor() : Colors.grey,
+                              ),
                         ),
                       )),
                   PopupMenuItem(
@@ -490,11 +492,10 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                           width: 20.0,
                         ),
                         title: Text(
-                          'Notación ' + (prefs.getString('notation') == null || prefs.getString('notation') == 'latina' ? 'americana' : 'latina'),
-                          style: Theme.of(context)
-                              .textTheme
-                              .subhead
-                              .copyWith(color: acordesDisponible ? Theme.of(context).textTheme.subhead.color : Colors.grey),
+                          'Notación ' + (prefs!.getString('notation') == null || prefs!.getString('notation') == 'latina' ? 'americana' : 'latina'),
+                          style: DefaultTextStyle.of(context).style.copyWith(
+                                color: acordesDisponible ? TemaModel.of(context).getScaffoldTextColor() : Colors.grey,
+                              ),
                         ),
                       )),
                   PopupMenuItem(
@@ -504,10 +505,11 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                         leading: Icon(Icons.expand_more),
                         title: Text(
                           'Scroll Automático',
-                          style: Theme.of(context).textTheme.subhead.copyWith(
-                              color: acordesDisponible && scrollController.position.maxScrollExtent > 0.0
-                                  ? Theme.of(context).textTheme.subhead.color
-                                  : Colors.grey),
+                          style: DefaultTextStyle.of(context).style.copyWith(
+                                color: acordesDisponible && scrollController.position.maxScrollExtent > 0.0
+                                    ? TemaModel.of(context).getScaffoldTextColor()
+                                    : Colors.grey,
+                              ),
                         ),
                       )),
                 ],
@@ -543,7 +545,6 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
       CupertinoPageScaffold(
         backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
         navigationBar: CupertinoNavigationBar(
-            actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
             backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
             middle: Text(
               widget.titulo,
@@ -621,14 +622,16 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                                               CupertinoActionSheetAction(
                                                 onPressed: toggleNotation,
                                                 child: Text(
-                                                    'Notación ' +
-                                                        (prefs.getString('notation') == null || prefs.getString('notation') == 'latina'
-                                                            ? 'americana'
-                                                            : 'latina'),
-                                                    style: TextStyle(
-                                                        color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark
-                                                            ? Colors.white
-                                                            : Colors.black)),
+                                                  'Notación ' +
+                                                      (prefs!.getString('notation') == null || prefs!.getString('notation') == 'latina'
+                                                          ? 'americana'
+                                                          : 'latina'),
+                                                  style: TextStyle(
+                                                    color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark
+                                                        ? Colors.white
+                                                        : Colors.black,
+                                                  ),
+                                                ),
                                               ),
                                               CupertinoActionSheetAction(
                                                 onPressed: toggleScrollMode,

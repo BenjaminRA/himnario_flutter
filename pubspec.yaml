@@ -7,7 +7,9 @@ description: Himnario con musica
 # Both the version and the builder number may be overridden in flutter
 # build by specifying --build-name and --build-number, respectively.
 # Read more about versioning at semver.org.
-version: 7.0.0+715
+version: 7.0.0+716
+environment:
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -15,27 +17,27 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^0.1.2
-  audioplayers: ^0.13.6
-  shared_preferences: ^0.5.6
+  cupertino_icons: ^1.0.6
+  audioplayers: ^6.1.1
+  shared_preferences: ^2.2.3
   sqflite:
-  flutter_crashlytics: ^0.2.1+1
-  screen: ^0.0.5
+  # wakelock: ^0.6.2
   http:
-  flutter_colorpicker: ^0.2.6
+  flutter_colorpicker: ^1.0.3
   url_launcher:
-  scoped_model: ^1.0.1
-  photo_view: ^0.4.2
+  scoped_model: ^2.0.0
+  photo_view: ^0.15.0
   # image_picker: ^0.6.1+2
-  launch_review: ^2.0.0
-  package_info: ^0.4.0+5
-  dynamic_theme:
+  launch_app_store: ^1.0.2
+  package_info_plus: ^8.1.4
+  wakelock_plus: ^1.2.10
+  # dynamic_theme:
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   integration_test:
-    # sdk: flutter
+    sdk: flutter
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec

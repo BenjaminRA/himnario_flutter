@@ -8,11 +8,11 @@ import 'isAndroid.dart';
 Future<void> showSimpleDialog(
   BuildContext context, {
   String title = "",
-  Widget content,
+  required Widget content,
   String confirm = "Aceptar",
   String cancel = "Cancelar",
-  Function onConfirm,
-  Function onCancel,
+  Function? onConfirm,
+  Function? onCancel,
 }) async {
   if (onConfirm == null) {
     onConfirm = () {};
@@ -25,13 +25,13 @@ Future<void> showSimpleDialog(
   if (isAndroid()) {
     await showDialog(
       context: context,
-      child: AlertDialog(
+      builder: (context) => AlertDialog(
         title: Text(title),
         content: content ?? Container(),
         actions: <Widget>[
-          FlatButton(
+          TextButton(
             onPressed: () {
-              onCancel();
+              onCancel!();
               Navigator.of(context).pop();
             },
             child: Text(
@@ -39,9 +39,9 @@ Future<void> showSimpleDialog(
               style: TextStyle(color: Colors.red),
             ),
           ),
-          FlatButton(
+          TextButton(
             onPressed: () {
-              onConfirm();
+              onConfirm!();
               Navigator.of(context).pop();
             },
             child: Text(confirm),
@@ -58,7 +58,7 @@ Future<void> showSimpleDialog(
         actions: <Widget>[
           CupertinoDialogAction(
             onPressed: () {
-              onCancel();
+              onCancel!();
               Navigator.of(context).pop();
             },
             isDestructiveAction: true,
@@ -66,7 +66,7 @@ Future<void> showSimpleDialog(
           ),
           CupertinoDialogAction(
             onPressed: () {
-              onConfirm();
+              onConfirm!();
               Navigator.of(context).pop();
             },
             child: Text(confirm),

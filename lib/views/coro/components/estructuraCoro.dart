@@ -6,15 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 class CoroText extends StatelessWidget {
-  CoroText({
-    this.estrofas,
-    this.fontSize,
-    this.alignment = 'Izquierda',
-    this.acordes,
-    this.animation,
-    this.notation,
-  });
-
   final String alignment;
   final List<Parrafo> estrofas;
   final double fontSize;
@@ -34,6 +25,15 @@ class CoroText extends StatelessWidget {
     "Rubik": 1.2,
     "Source Sans Pro": 0.7,
   };
+
+  CoroText({
+    this.alignment = 'Izquierda',
+    required this.estrofas,
+    required this.fontSize,
+    required this.acordes,
+    required this.animation,
+    required this.notation,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -58,19 +58,11 @@ class CoroText extends StatelessWidget {
           ? notation == 'americana'
               ? Acordes.toAmericano(parrafo.acordes).split('\n')
               : parrafo.acordes.split('\n')
-          : List<String>();
+          : [];
 
       List<String> lineasParrafos = parrafo.parrafo.split('\n');
 
-      Color color;
-
-      if (isAndroid()) {
-        color = Theme.of(context).brightness == Brightness.light ? Theme.of(context).textTheme.body1.color : Colors.white;
-      } else {
-        color = ScopedModel.of<TemaModel>(context).brightness == Brightness.light
-            ? CupertinoTheme.of(context).primaryColor
-            : ScopedModel.of<TemaModel>(context).getAccentColorText();
-      }
+      Color color = TemaModel.of(context).getScaffoldTextColor();
 
       if (parrafo.coro) {
         parrafos.add(
@@ -101,7 +93,7 @@ class CoroText extends StatelessWidget {
                       text: lineasAcordes[i] + '\n',
                       style: TextStyle(
                         fontSize: animation * fontSize,
-                        height: Theme.of(context).textTheme.body1.height,
+                        // height: Theme.of(context).textTheme.body1.height,
                         fontStyle: FontStyle.italic,
                         fontWeight: FontWeight.bold,
                         wordSpacing: fontFamilies[DefaultTextStyle.of(context).style.fontFamily],

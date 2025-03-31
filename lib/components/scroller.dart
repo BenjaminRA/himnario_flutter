@@ -17,8 +17,8 @@ class Scroller extends StatefulWidget {
   final double iPhoneXBottomPadding;
 
   Scroller({
-    this.himnos,
-    this.cargando,
+    required this.himnos,
+    required this.cargando,
     this.mensaje = '',
     this.iPhoneX = false,
     this.iPhoneXBottomPadding = 0.0,
@@ -30,10 +30,10 @@ class Scroller extends StatefulWidget {
 }
 
 class _ScrollerState extends State<Scroller> {
-  ScrollController scrollController;
+  late ScrollController scrollController;
   bool dragging = false;
-  double scrollPosition;
-  double iPhoneXPadding;
+  late double scrollPosition;
+  late double iPhoneXPadding;
 
   @override
   void initState() {
@@ -70,6 +70,7 @@ class _ScrollerState extends State<Scroller> {
   }
 
   Widget materialLayout(BuildContext context) {
+    final TemaModel tema = TemaModel.of(context);
     int length = widget.himnos.length == 0 ? 1 : widget.himnos.length;
     if (scrollPosition == double.infinity || scrollPosition == double.nan) {
       scrollPosition = 105.0 - 90.0;
@@ -84,6 +85,7 @@ class _ScrollerState extends State<Scroller> {
                   widget.mensaje,
                   textAlign: TextAlign.center,
                   textScaleFactor: 1.5,
+                  style: tema.getScaffoldTextStyle(context),
                 )),
               )
             : ListView.builder(
@@ -92,16 +94,11 @@ class _ScrollerState extends State<Scroller> {
                 itemCount: widget.himnos.length,
                 itemBuilder: (BuildContext context, int index) {
                   bool selected = (scrollPosition - 15) ~/ ((MediaQuery.of(context).size.height - 129) / length) == index;
-                  Color color = selected && dragging
-                      ? (Theme.of(context).brightness == Brightness.light
-                          ? Theme.of(context).primaryIconTheme.color
-                          : Theme.of(context).accentTextTheme.body1.color)
-                      : Theme.of(context).textTheme.subhead.color;
+
+                  Color color = selected && dragging ? tema.getScaffoldTextColor().withOpacity(0.8) : tema.getScaffoldTextColor();
 
                   return Container(
-                    color: selected && dragging
-                        ? (Theme.of(context).brightness == Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor)
-                        : Theme.of(context).scaffoldBackgroundColor,
+                    color: selected && dragging ? tema.getAccentColor() : tema.getScaffoldBackgroundColor(),
                     child: ListTile(
                       onTap: () async {
                         await Navigator.push(
@@ -132,7 +129,7 @@ class _ScrollerState extends State<Scroller> {
                         child: Text(
                           ((widget.himnos[index].numero > 517 ? '' : '${widget.himnos[index].numero} - ') + '${widget.himnos[index].titulo}'),
                           softWrap: true,
-                          style: Theme.of(context).textTheme.subhead.copyWith(color: color),
+                          style: tema.getScaffoldTextStyle(context),
                         ),
                       ),
                       trailing: widget.himnos[index].descargado
@@ -196,9 +193,9 @@ class _ScrollerState extends State<Scroller> {
                       width: 40.0,
                       child: CustomPaint(
                         painter: SideScroller(
+                          context,
                           himnos: widget.himnos,
                           position: scrollPosition,
-                          context: context,
                           dragging: dragging,
                           numero: dragging ? (scrollPosition - 15) ~/ ((MediaQuery.of(context).size.height - 129) / length) : -1,
                         ),
@@ -210,7 +207,7 @@ class _ScrollerState extends State<Scroller> {
   }
 
   Widget cupertinoLayout(BuildContext context) {
-    final TemaModel tema = ScopedModel.of<TemaModel>(context, rebuildOnChange: true);
+    final TemaModel tema = TemaModel.of(context);
     int length = widget.himnos.length == 0 ? 1 : widget.himnos.length;
     if (scrollPosition == double.infinity || scrollPosition == double.nan) {
       scrollPosition = 72.0 + iPhoneXPadding;
@@ -221,15 +218,13 @@ class _ScrollerState extends State<Scroller> {
         widget.himnos.isEmpty
             ? Container(
                 child: Center(
-                    child: Text(
-                  widget.mensaje,
-                  textScaleFactor: 1.5,
-                  textAlign: TextAlign.center,
-                  style: DefaultTextStyle.of(context).style.copyWith(
-                        color: ScopedModel.of<TemaModel>(context).getScaffoldTextColor(),
-                        fontFamily: ScopedModel.of<TemaModel>(context).font,
-                      ),
-                )),
+                  child: Text(
+                    widget.mensaje,
+                    textScaleFactor: 1.5,
+                    textAlign: TextAlign.center,
+                    style: tema.getScaffoldTextStyle(context),
+                  ),
+                ),
               )
             : ListView.builder(
                 key: PageStorageKey('Scroller Tema'),
@@ -378,10 +373,9 @@ class _ScrollerState extends State<Scroller> {
                           offset: Offset(0.0, -65.0),
                           child: CustomPaint(
                             painter: SideScroller(
-                              tema: tema,
+                              context,
                               himnos: widget.himnos,
                               position: scrollPosition,
-                              context: context,
                               dragging: dragging,
                               iPhoneXPadding: iPhoneXPadding,
                               numero: dragging
@@ -408,23 +402,24 @@ class _ScrollerState extends State<Scroller> {
 class SideScroller extends CustomPainter {
   double position;
   bool dragging;
-  Color textColor;
   BuildContext context;
   int numero;
-  Paint scrollBar;
   List<Himno> himnos;
   double iPhoneXPadding;
-  TemaModel tema;
 
-  SideScroller({
-    this.tema,
-    this.position,
-    BuildContext context,
-    this.dragging,
-    this.numero,
-    this.himnos,
+  late Paint scrollBar;
+  late Color textColor;
+
+  SideScroller(
+    this.context, {
+    required this.position,
+    required this.dragging,
+    required this.numero,
+    required this.himnos,
     this.iPhoneXPadding = 0.0,
   }) {
+    final TemaModel tema = TemaModel.of(context);
+
     if (isAndroid()) {
       scrollBar = Paint()
         ..color = dragging ? (Theme.of(context).brightness == Brightness.light ? Colors.black : Theme.of(context).cardColor) : Colors.grey

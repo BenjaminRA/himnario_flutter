@@ -4,7 +4,11 @@ import 'package:Himnario/models/himnos.dart';
 class HimnoText extends StatelessWidget {
   final String alignment;
 
-  HimnoText({this.estrofas, this.fontSize, this.alignment = 'Izquierda'});
+  HimnoText({
+    required this.estrofas,
+    required this.fontSize,
+    this.alignment = 'Izquierda',
+  });
 
   final List<Parrafo> estrofas;
   final double fontSize;
@@ -34,7 +38,7 @@ class HimnoText extends StatelessWidget {
         }
         break;
     }
-    List<TextSpan> parrafos = List<TextSpan>();
+    List<TextSpan> parrafos = [];
     for (Parrafo parrafo in estrofas) {
       if (parrafo.coro)
         parrafos.addAll([

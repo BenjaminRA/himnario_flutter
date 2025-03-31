@@ -18,8 +18,8 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:package_info/package_info.dart';
-import 'package:launch_review/launch_review.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:launch_app_store/launch_app_store.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:Himnario/views/ajustes/ajustes.dart';
@@ -35,51 +35,44 @@ import 'package:Himnario/api/api.dart';
 import 'package:Himnario/models/tema.dart';
 
 class MainPage extends StatefulWidget {
-  final int mainColor;
-  final String font;
+  final int? mainColor;
+  final String? font;
   final Brightness brightness;
 
-  MainPage({this.mainColor, this.font, this.brightness});
+  MainPage({this.mainColor, this.font, required this.brightness});
 
   @override
   _MainPageState createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> with RouteAware {
-  List<Categoria> categorias;
-  List<Himno> coros;
-  List<bool> expanded;
-  PageController pageController;
-  SharedPreferences prefs;
-  int currentPage;
-  bool cargando;
+  List<Categoria> categorias = [];
+  List<Himno> coros = [];
+  List<bool> expanded = <bool>[false, false, false, false, false, false];
+
+  PageController pageController = PageController(
+    initialPage: 0,
+    keepPage: true,
+  );
+
+  late SharedPreferences prefs;
+  int currentPage = 0;
+  bool cargando = false;
 
   // Android specific
   final GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
 
   // iOS specific
-  TemaModel tema;
+  late TemaModel tema;
 
   @override
   void initState() {
     super.initState();
-    cargando = false;
-    pageController = PageController(
-      initialPage: 0,
-      keepPage: true,
-    );
-    expanded = <bool>[false, false, false, false, false, false];
-    currentPage = 0;
-    categorias = List<Categoria>();
-    coros = List<Himno>();
 
-    // iOS theme
-    if (!isAndroid()) {
-      tema = TemaModel()
-        ..setMainColor(Color(widget.mainColor ?? 4294309365))
-        ..setFont(widget.font ?? 'Merriweather')
-        ..setBrightness(widget.brightness);
-    }
+    tema = TemaModel()
+      ..setMainColor(Color(widget.mainColor ?? 4294309365))
+      ..setFont(widget.font ?? 'Merriweather')
+      ..setBrightness(widget.brightness);
 
     SharedPreferences.getInstance().then((value) {
       prefs = value;
@@ -87,27 +80,27 @@ class _MainPageState extends State<MainPage> with RouteAware {
     });
   }
 
-  Future<Null> getAnuncios(SharedPreferences prefs) async {
-    http.Response request = await http.get(DatabaseApi.getAnuncios());
+  Future<void> getAnuncios(SharedPreferences prefs) async {
+    http.Response request = await http.get(Uri.dataFromString(DatabaseApi.getAnuncios()));
     Map<String, dynamic> json = jsonDecode(request.body);
-    List<String> anuncios = prefs.getStringList('anuncios') == null ? [] : prefs.getStringList('anuncios');
+    List<String>? anuncios = prefs.getStringList('anuncios');
 
-    for (dynamic anuncio in json['anuncios']) {
-      if (!anuncios.contains(anuncio['id'].toString())) {
-        await showSimpleDialog(
-          context,
-          title: anuncio['titulo'],
-          content: Text(anuncio['contenido']),
-          cancel: "No volver a mostrar",
-          onCancel: () => anuncios.add(anuncio['id'].toString()),
-          confirm: "Cerrar",
-        );
+    if (anuncios != null) {
+      for (dynamic anuncio in json['anuncios']) {
+        if (!anuncios.contains(anuncio['id'].toString())) {
+          await showSimpleDialog(
+            context,
+            title: anuncio['titulo'],
+            content: Text(anuncio['contenido']),
+            cancel: "No volver a mostrar",
+            onCancel: () => anuncios.add(anuncio['id'].toString()),
+            confirm: "Cerrar",
+          );
+        }
       }
+
+      prefs.setStringList('anuncios', anuncios);
     }
-
-    prefs.setStringList('anuncios', anuncios);
-
-    return null;
   }
 
   Future<Null> checkUpdates(SharedPreferences prefs) async {
@@ -116,8 +109,9 @@ class _MainPageState extends State<MainPage> with RouteAware {
       final result = await InternetAddress.lookup('google.com');
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
         print('connected');
-        String date = prefs.getString('latest');
-        http.Response res = await http.post(DatabaseApi.checkUpdates(),
+
+        String? date = prefs.getString('latest');
+        http.Response res = await http.post(Uri.dataFromString(DatabaseApi.checkUpdates()),
             headers: {'Content-Type': 'application/json'},
             body: utf8.encode(json.encode({'latest': date != null ? date : '2018-08-19 05:01:46.447 +00:00'})));
         List<dynamic> latest = jsonDecode(res.body);
@@ -125,43 +119,45 @@ class _MainPageState extends State<MainPage> with RouteAware {
         // Compare latest server update date with local update date
         if (latest.isNotEmpty) if (date == null || date != latest[0]['updatedAt']) {
           if (isAndroid()) {
-            _globalKey.currentState.showSnackBar(SnackBar(
-              content: Row(
-                children: <Widget>[
-                  Icon(
-                    Icons.get_app,
-                    color: Theme.of(context).brightness == Brightness.light ? Colors.white : Colors.black,
-                  ),
-                  SizedBox(
-                    width: 15.0,
-                  ),
-                  Text(
-                    'Actualizando Base de Datos',
-                    style: Theme.of(context)
-                        .textTheme
-                        .button
-                        .copyWith(color: Theme.of(context).brightness == Brightness.light ? Colors.white : Colors.black),
-                  )
-                ],
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.get_app,
+                      color: Theme.of(context).brightness == Brightness.light ? Colors.white : Colors.black,
+                    ),
+                    SizedBox(
+                      width: 15.0,
+                    ),
+                    Text(
+                      'Actualizando Base de Datos',
+                      style: Theme.of(context)
+                          .textTheme
+                          .button
+                          .copyWith(color: Theme.of(context).brightness == Brightness.light ? Colors.white : Colors.black),
+                    )
+                  ],
+                ),
+                action: SnackBarAction(
+                  label: 'Ok',
+                  textColor: Theme.of(context).brightness == Brightness.light ? Colors.white : Colors.black,
+                  onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                ),
               ),
-              action: SnackBarAction(
-                label: 'Ok',
-                textColor: Theme.of(context).brightness == Brightness.light ? Colors.white : Colors.black,
-                onPressed: () => _globalKey.currentState.hideCurrentSnackBar(),
-              ),
-            ));
+            );
           }
 
           setState(() => cargando = true);
           print('descargando');
-          http.Response request = await http.get(DatabaseApi.getDb());
+          http.Response request = await http.get(Uri.dataFromString(DatabaseApi.getDb()));
 
           // Favoritos
-          List<int> favoritos = List<int>();
+          List<int> favoritos = [];
           // Descargados
-          List<List<int>> descargados = List<List<int>>();
+          List<List<int>> descargados = [];
           // transpose
-          List<Himno> transposedHImnos = List<Himno>();
+          List<Himno> transposedHImnos = [];
 
           await DB.execute('CREATE TABLE IF NOT EXISTS favoritos(himno_id int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
           await DB.execute('CREATE TABLE IF NOT EXISTS descargados(himno_id int, duracion int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
@@ -186,7 +182,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
           prefs.setString('latest', latest[0]['updatedAt']);
 
           if (isAndroid()) {
-            _globalKey.currentState.showSnackBar(
+            ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Row(
                   children: <Widget>[
@@ -207,7 +203,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
                 action: SnackBarAction(
                   label: 'Ok',
                   textColor: Colors.white,
-                  onPressed: () => _globalKey.currentState.hideCurrentSnackBar(),
+                  onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                 ),
               ),
             );

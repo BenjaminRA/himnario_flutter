@@ -1,5 +1,5 @@
 class VoicesApi {
-  static String _base = 'http://104.131.104.212:8085';
+  static String _base = 'http://api-himnario-legacy.songbooksofpraise.com:8085';
 
   static String voicesAvailable() => _base + '/disponibles';
   static String voiceAvailable(int number) => _base + '/himno/$number/Soprano/disponible';
@@ -8,14 +8,14 @@ class VoicesApi {
 }
 
 class SheetsApi {
-  static String _base = 'http://104.131.104.212:8085';
+  static String _base = 'http://api-himnario-legacy.songbooksofpraise.com:8085';
 
   static String sheetAvailable(int number) => _base + '/partitura/$number/disponible';
   static String getSheet(int number) => _base + '/partitura/$number';
 }
 
 class DatabaseApi {
-  static String _base = 'http://104.131.104.212:8085';
+  static String _base = 'http://api-himnario-legacy.songbooksofpraise.com:8085';
 
   static String getDb() => _base + '/db';
   static String checkUpdates() => _base + '/updates';

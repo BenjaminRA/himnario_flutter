@@ -19,12 +19,11 @@ class AjustesPage extends StatefulWidget {
 }
 
 class _AjustesPageState extends State<AjustesPage> {
-  SharedPreferences prefs;
-  int downloaded;
+  SharedPreferences? prefs;
+  int downloaded = -1;
 
   @override
   void initState() {
-    downloaded = -1;
     super.initState();
     loadThemes();
     checkPartituras().then((ready) {
@@ -59,9 +58,9 @@ class _AjustesPageState extends State<AjustesPage> {
     for (int i = 1; i <= 517; ++i) {
       File aux = File(path + '/$i.jpg');
       if (!(await aux.exists())) {
-        http.Response res = await http.get(SheetsApi.sheetAvailable(i));
+        http.Response res = await http.get(Uri.parse(SheetsApi.sheetAvailable(i)));
         if (res.statusCode == 200) {
-          http.get(SheetsApi.getSheet(i)).then((image) async {
+          http.get(Uri.parse(SheetsApi.getSheet(i))).then((image) async {
             await aux.writeAsBytes(image.bodyBytes);
             if (mounted) setState(() => downloaded += 1);
           });
@@ -231,7 +230,6 @@ class _AjustesPageState extends State<AjustesPage> {
     return CupertinoPageScaffold(
       backgroundColor: tema.getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
-        actionsForegroundColor: tema.getTabTextColor(),
         backgroundColor: tema.getTabBackgroundColor(),
         middle: Text(
           'Ajustes',

@@ -6,22 +6,21 @@ import 'package:Himnario/helpers/isAndroid.dart';
 import 'package:Himnario/views/main/mainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  ThemeData tema;
+  late ThemeData tema;
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  int mainColor = prefs.getInt('mainColor');
-  String font = prefs.getString('font');
+  int? mainColor = prefs.getInt('mainColor');
+  String? font = prefs.getString('font');
   bool dark = prefs.getString('brightness') == Brightness.dark.toString() ? true : false;
   String fontFamily = prefs.getString('fuente') ?? 'Merriweather';
   if (['Raleway', '.SF Pro Text'].contains(fontFamily)) fontFamily = 'Merriweather';
 
   if (isAndroid()) {
-    String temaJson = prefs.getString('temaPrincipal');
+    String? temaJson = prefs.getString('temaPrincipal');
     if (temaJson == null)
       tema = ThemeData(
         primarySwatch: MaterialColor(Colors.black.value, {
@@ -43,7 +42,6 @@ void main() async {
       tema = ThemeData(
         brightness: dark ? Brightness.dark : Brightness.light,
         scaffoldBackgroundColor: dark ? Colors.black : null,
-        accentColor: dark ? Color.fromRGBO(json['red'], json['green'], json['blue'], 1) : null,
         cardColor: dark ? Color.fromRGBO(33, 33, 33, 1) : null,
         primarySwatch: MaterialColor(json['value'], {
           50: Color.fromRGBO(json['red'], json['green'], json['blue'], .1),
@@ -58,6 +56,12 @@ void main() async {
           900: Color.fromRGBO(json['red'], json['green'], json['blue'], 1),
         }),
         fontFamily: prefs.getString('fuente') ?? 'Merriweather',
+      );
+
+      tema = tema.copyWith(
+        colorScheme: tema.colorScheme.copyWith(
+          secondary: dark ? Color.fromRGBO(json['red'], json['green'], json['blue'], 1) : null,
+        ),
       );
     }
   }
@@ -75,26 +79,24 @@ void main() async {
 final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
 
 class MyApp extends StatelessWidget {
-  MyApp({this.tema, this.mainColor, this.font, this.brightness});
+  MyApp({required this.tema, this.mainColor, this.font, required this.brightness});
 
   final ThemeData tema;
-  final int mainColor;
-  final String font;
+  final int? mainColor;
+  final String? font;
   final Brightness brightness;
 
   @override
   Widget build(BuildContext context) {
     return isAndroid()
-        ? DynamicTheme(
-            data: (Brightness brightness) => tema,
-            themedWidgetBuilder: (BuildContext context, ThemeData theme) => MaterialApp(
-                  // debugShowCheckedModeBanner: false,
-                  // showSemanticsDebugger: false,
-                  navigatorObservers: [routeObserver],
-                  title: 'Himnos y Cánticos del Evangelio',
-                  theme: theme,
-                  home: MainPage(),
-                ))
+        ? MaterialApp(
+            // debugShowCheckedModeBanner: false,
+            // showSemanticsDebugger: false,
+            navigatorObservers: [routeObserver],
+            title: 'Himnos y Cánticos del Evangelio',
+            theme: tema,
+            home: MainPage(mainColor: mainColor, font: font, brightness: brightness),
+          )
         : CupertinoApp(
             // debugShowCheckedModeBanner: false,
             navigatorObservers: [routeObserver],

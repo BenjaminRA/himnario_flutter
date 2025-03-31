@@ -9,11 +9,14 @@ import 'package:scoped_model/scoped_model.dart';
 
 Route getPageRoute(
   Widget page, {
-  TemaModel tema,
+  required TemaModel tema,
 }) {
   if (isAndroid()) {
     return MaterialPageRoute(
-      builder: (BuildContext context) => page,
+      builder: (BuildContext context) => ScopedModel<TemaModel>(
+        model: tema,
+        child: page,
+      ),
     );
   }
   return CupertinoPageRoute(
