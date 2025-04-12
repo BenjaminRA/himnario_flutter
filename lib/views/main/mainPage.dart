@@ -534,7 +534,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
             duration: Duration(milliseconds: 1000),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(5.0),
-              color: TemaModel.of(context).getAccentColorText(),
+              color: tema.getAccentColor(),
             ),
             width: 100.0,
             height: 54.0,
@@ -542,6 +542,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
                 padding: EdgeInsets.only(left: 50.0),
                 child: CupertinoActivityIndicator(
                   animating: true,
+                  color: tema.getAccentColorText(),
                 )),
           ),
         ),

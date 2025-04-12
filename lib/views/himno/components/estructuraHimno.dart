@@ -17,6 +17,8 @@ class HimnoText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     TextAlign align;
     switch (alignment) {
       case 'Izquierda':
@@ -83,20 +85,18 @@ class HimnoText extends StatelessWidget {
               ),
             ),
           )
-        : ScopedModelDescendant(
-            builder: (BuildContext context, Widget? child, TemaModel tema) => Container(
-              padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
-              child: Center(
-                child: RichText(
-                  textDirection: TextDirection.ltr,
-                  textAlign: align,
-                  text: TextSpan(
-                    style: TextStyle(
-                      color: ScopedModel.of<TemaModel>(context).getScaffoldTextColor(),
-                      fontFamily: tema.font,
-                    ),
-                    children: parrafos,
+        : Container(
+            padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+            child: Center(
+              child: RichText(
+                textDirection: TextDirection.ltr,
+                textAlign: align,
+                text: TextSpan(
+                  style: TextStyle(
+                    color: tema.getScaffoldTextColor(),
+                    fontFamily: tema.font,
                   ),
+                  children: parrafos,
                 ),
               ),
             ),

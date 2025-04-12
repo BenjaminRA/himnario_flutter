@@ -143,26 +143,24 @@ class _BuscadorState extends State<Buscador> {
 
   Widget cupertinoLayout(BuildContext context) {
     final TemaModel tema = ScopedModel.of<TemaModel>(context);
+
     return CupertinoPageScaffold(
-      backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
-          backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
+          backgroundColor: tema.getAccentColor(),
           middle: CupertinoTextField(
             autofocus: true,
             onChanged: fetchHimnos,
-            cursorColor: Colors.black,
-            style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                  color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark
-                      ? Colors.black
-                      : (ScopedModel.of<TemaModel>(context).brightness == Brightness.light ? null : Colors.black),
-                  fontFamily: ScopedModel.of<TemaModel>(context).font,
-                ),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(50.0), color: Colors.white),
+            cursorColor: tema.brightness == Brightness.light ? Colors.black : Colors.white,
+            style: TextStyle(
+              color: tema.brightness == Brightness.light ? Colors.black : Colors.white,
+              fontFamily: tema.font,
+            ),
+            decoration:
+                BoxDecoration(borderRadius: BorderRadius.circular(50.0), color: tema.brightness == Brightness.light ? Colors.white : Colors.black),
             suffix: cargando
-                ? ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                        Colors.white, WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? BlendMode.difference : BlendMode.darken),
-                    child: Container(margin: EdgeInsets.only(right: 10.0), child: CupertinoActivityIndicator()),
+                ? Container(
+                    margin: EdgeInsets.only(right: 10.0),
+                    child: CupertinoActivityIndicator(),
                   )
                 : null,
           )),

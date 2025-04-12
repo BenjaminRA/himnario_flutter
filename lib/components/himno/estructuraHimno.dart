@@ -1,3 +1,4 @@
+import 'package:Himnario/models/tema.dart';
 import 'package:flutter/material.dart';
 import 'package:Himnario/models/himnos.dart';
 
@@ -15,6 +16,8 @@ class HimnoText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     TextAlign align;
     switch (alignment) {
       case 'Izquierda':
@@ -61,7 +64,13 @@ class HimnoText extends StatelessWidget {
             child: RichText(
           textDirection: TextDirection.ltr,
           textAlign: align,
-          text: TextSpan(style: DefaultTextStyle.of(context).style, children: parrafos),
+          text: TextSpan(
+            style: TextStyle(
+              color: tema.getScaffoldTextColor(),
+              fontFamily: tema.font,
+            ),
+            children: parrafos,
+          ),
         )));
   }
 }

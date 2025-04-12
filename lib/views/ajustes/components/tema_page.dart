@@ -220,22 +220,31 @@ class _TemasPageState extends State<TemasPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 TextButton(
-                  child: Text('Cancelar', style: TextStyle(color: tema.getScaffoldTextColor())),
+                  child: Text(
+                    'Cancelar',
+                    style: TextStyle(
+                      color: tema.getScaffoldTextColor(),
+                      fontFamily: tema.font,
+                    ),
+                  ),
                   onPressed: () {
-                    ScopedModel.of<TemaModel>(context).setMainColor(originalColor);
-                    ScopedModel.of<TemaModel>(context).setBrightness(originalDark ? Brightness.dark : Brightness.light);
+                    tema.setMainColor(originalColor);
+                    tema.setBrightness(originalDark ? Brightness.dark : Brightness.light);
                     Navigator.of(context).pop();
                   },
                 ),
                 TextButton(
                   child: Text(
                     'Guardar',
-                    style: TextStyle(color: tema.getScaffoldTextColor()),
+                    style: TextStyle(
+                      color: tema.getScaffoldTextColor(),
+                      fontFamily: tema.font,
+                    ),
                   ),
                   onPressed: () {
                     Brightness brightness = dark ? Brightness.dark : Brightness.light;
-                    ScopedModel.of<TemaModel>(context).setMainColor(pickerColor);
-                    ScopedModel.of<TemaModel>(context).setBrightness(brightness);
+                    tema.setMainColor(pickerColor);
+                    tema.setBrightness(brightness);
 
                     prefs!.setInt('mainColor', pickerColor.value);
                     prefs!.setString('brightness', brightness.toString());

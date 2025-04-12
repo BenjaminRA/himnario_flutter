@@ -94,16 +94,19 @@ class _DescargadosPageState extends State<DescargadosPage> with RouteAware {
   }
 
   Widget cupertinoLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     return CupertinoPageScaffold(
-      backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
         // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
-        backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
-        middle: Text('Himnos Descargados',
-            style: CupertinoTheme.of(context)
-                .textTheme
-                .textStyle
-                .copyWith(color: ScopedModel.of<TemaModel>(context).getTabTextColor(), fontFamily: ScopedModel.of<TemaModel>(context).font)),
+        backgroundColor: tema.getAccentColor(),
+        middle: Text(
+          'Himnos Descargados',
+          style: TextStyle(
+            color: tema.getAccentColorText(),
+            fontFamily: tema.font,
+          ),
+        ),
       ),
       child: Scroller(
         himnos: himnos,

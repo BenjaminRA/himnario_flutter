@@ -95,17 +95,17 @@ class _FavoritosPageState extends State<FavoritosPage> with RouteAware {
   }
 
   Widget cupertinoLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     return CupertinoPageScaffold(
-        backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
         navigationBar: CupertinoNavigationBar(
-          // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
-          backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
+          backgroundColor: tema.getAccentColor(),
           middle: Text(
             'Favoritos',
-            style: CupertinoTheme.of(context)
-                .textTheme
-                .textStyle
-                .copyWith(color: ScopedModel.of<TemaModel>(context).getTabTextColor(), fontFamily: ScopedModel.of<TemaModel>(context).font),
+            style: TextStyle(
+              color: tema.getAccentColorText(),
+              fontFamily: tema.font,
+            ),
           ),
         ),
         child: Scroller(

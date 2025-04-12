@@ -228,15 +228,14 @@ class _AjustesPageState extends State<AjustesPage> {
     }
 
     return CupertinoPageScaffold(
-      backgroundColor: tema.getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: tema.getTabBackgroundColor(),
+        backgroundColor: tema.getAccentColor(),
         middle: Text(
           'Ajustes',
-          style: CupertinoTheme.of(context)
-              .textTheme
-              .textStyle
-              .copyWith(color: tema.getTabTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font),
+          style: TextStyle(
+            color: tema.getAccentColorText(),
+            fontFamily: tema.font,
+          ),
         ),
       ),
       child: ListView(

@@ -322,10 +322,7 @@ class _HimnosTabState extends State<HimnosTab> {
                             Navigator.push(
                               context,
                               CupertinoPageRoute(
-                                builder: (BuildContext context) => ScopedModel<TemaModel>(
-                                  model: tema,
-                                  child: QuickBuscador(),
-                                ),
+                                builder: (BuildContext context) => QuickBuscador(),
                               ),
                             );
                           },

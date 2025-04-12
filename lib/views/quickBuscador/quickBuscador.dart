@@ -177,24 +177,24 @@ class _QuickBuscadorState extends State<QuickBuscador> {
   }
 
   Widget cupertinoLayout() {
+    final tema = TemaModel.of(context);
+
     return CupertinoPageScaffold(
-      backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
           // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
-          backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
+          backgroundColor: tema.getAccentColor(),
           middle: Padding(
             padding: EdgeInsets.only(right: 0.0),
             child: CupertinoTextField(
               autofocus: true,
               keyboardType: TextInputType.number,
-              cursorColor: Colors.black,
-              style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                    color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark
-                        ? Colors.black
-                        : (ScopedModel.of<TemaModel>(context).brightness == Brightness.light ? null : Colors.black),
-                    fontFamily: ScopedModel.of<TemaModel>(context).font,
-                  ),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(50.0), color: Colors.white),
+              cursorColor: tema.brightness == Brightness.light ? Colors.black : Colors.white,
+              style: TextStyle(
+                color: tema.brightness == Brightness.light ? Colors.black : Colors.white,
+                fontFamily: tema.font,
+              ),
+              decoration:
+                  BoxDecoration(borderRadius: BorderRadius.circular(50.0), color: tema.brightness == Brightness.light ? Colors.white : Colors.black),
               suffix: Container(
                 width: MediaQuery.of(context).size.width - 200,
                 margin: EdgeInsets.only(right: 6.0),
@@ -203,12 +203,8 @@ class _QuickBuscadorState extends State<QuickBuscador> {
                   softWrap: false,
                   textAlign: TextAlign.end,
                   style: TextStyle(
-                    color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark
-                        ? Colors.black
-                        : (ScopedModel.of<TemaModel>(context).brightness == Brightness.light
-                            ? CupertinoTheme.of(context).textTheme.textStyle.color
-                            : Colors.black),
-                    fontFamily: ScopedModel.of<TemaModel>(context).font,
+                    color: tema.brightness == Brightness.light ? Colors.black : Colors.white,
+                    fontFamily: tema.font,
                     fontSize: 20.0,
                     fontWeight: FontWeight.w500,
                   ),
@@ -247,8 +243,10 @@ class _QuickBuscadorState extends State<QuickBuscador> {
                         child: Text(
                           'Himno no encontrado',
                           textAlign: TextAlign.center,
-                          style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                              color: ScopedModel.of<TemaModel>(context).getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context).font),
+                          style: TextStyle(
+                            color: tema.getScaffoldTextColor(),
+                            fontFamily: tema.font,
+                          ),
                           textScaleFactor: 1.5,
                         ),
                       )
@@ -256,8 +254,10 @@ class _QuickBuscadorState extends State<QuickBuscador> {
                         child: Text(
                           'Ingrese el número del himno',
                           textAlign: TextAlign.center,
-                          style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                              color: ScopedModel.of<TemaModel>(context).getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context).font),
+                          style: TextStyle(
+                            color: tema.getScaffoldTextColor(),
+                            fontFamily: tema.font,
+                          ),
                           textScaleFactor: 1.5,
                         ),
                       )

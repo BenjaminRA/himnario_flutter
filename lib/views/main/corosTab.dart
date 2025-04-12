@@ -55,9 +55,8 @@ class _CorosTabState extends State<CorosTab> {
     final tema = ScopedModel.of<TemaModel>(context);
 
     return CupertinoPageScaffold(
-      backgroundColor: tema.getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: tema.getTabBackgroundColor(),
+        backgroundColor: tema.getAccentColor(),
         // actionsForegroundColor: tema.getTabTextColor(),
         transitionBetweenRoutes: false,
         leading: CupertinoButton(
@@ -66,6 +65,7 @@ class _CorosTabState extends State<CorosTab> {
           child: Icon(
             Icons.menu,
             size: 30.0,
+            color: tema.getAccentColorText(),
           ),
         ),
         trailing: CupertinoButton(
@@ -79,11 +79,18 @@ class _CorosTabState extends State<CorosTab> {
             );
           },
           padding: EdgeInsets.only(bottom: 2.0),
-          child: Icon(CupertinoIcons.search, size: 30.0),
+          child: Icon(
+            CupertinoIcons.search,
+            size: 30.0,
+            color: tema.getAccentColorText(),
+          ),
         ),
         middle: Text(
           'Coros',
-          style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(color: tema.getTabTextColor(), fontFamily: tema.font),
+          style: TextStyle(
+            color: tema.getAccentColorText(),
+            fontFamily: tema.font,
+          ),
         ),
       ),
       child: Stack(

@@ -68,6 +68,8 @@ class AlineacionesPageState extends State<AlineacionesPage> {
   }
 
   Widget cupertinoLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     List<Widget> botones = [];
     if (prefs != null)
       for (int i = 0; i < alignments.length; ++i) {
@@ -85,11 +87,17 @@ class AlineacionesPageState extends State<AlineacionesPage> {
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsets.only(right: 10.0),
-                      child: Icon(alignments[i][1],
-                          color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black),
+                      child: Icon(
+                        alignments[i][1],
+                        color: tema.getScaffoldTextColor(),
+                      ),
                     ),
-                    Text(alignments[i][0],
-                        style: TextStyle(color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black)),
+                    Text(
+                      alignments[i][0],
+                      style: TextStyle(
+                        color: tema.getScaffoldTextColor(),
+                      ),
+                    ),
                   ],
                 ),
                 IgnorePointer(
@@ -113,14 +121,20 @@ class AlineacionesPageState extends State<AlineacionesPage> {
         TextButton(
           child: Text(
             'Cancelar',
-            style: TemaModel.of(context).getButtonTextStyle(context),
+            style: TextStyle(
+              color: tema.getScaffoldTextColor(),
+              fontFamily: tema.font,
+            ),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         TextButton(
           child: Text(
             'Guardar',
-            style: TemaModel.of(context).getButtonTextStyle(context),
+            style: TextStyle(
+              color: tema.getScaffoldTextColor(),
+              fontFamily: tema.font,
+            ),
           ),
           onPressed: () {
             if (value != null) {

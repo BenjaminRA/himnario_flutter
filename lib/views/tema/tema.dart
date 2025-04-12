@@ -148,17 +148,18 @@ class _TemaPageState extends State<TemaPage> with RouteAware {
   }
 
   Widget cupertinoLayout() {
-    final TemaModel tema = ScopedModel.of<TemaModel>(context);
+    final TemaModel tema = TemaModel.of(context);
+
     return CupertinoPageScaffold(
-      backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
-        // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
-        backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
-        middle: Text(widget.tema,
-            style: CupertinoTheme.of(context)
-                .textTheme
-                .textStyle
-                .copyWith(color: ScopedModel.of<TemaModel>(context).getTabTextColor(), fontFamily: ScopedModel.of<TemaModel>(context).font)),
+        backgroundColor: tema.getAccentColor(),
+        middle: Text(
+          widget.tema,
+          style: TextStyle(
+            color: tema.getAccentColorText(),
+            fontFamily: tema.font,
+          ),
+        ),
       ),
       child: ScopedModel<TemaModel>(
         model: tema,

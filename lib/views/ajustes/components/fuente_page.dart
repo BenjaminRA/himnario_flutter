@@ -110,14 +110,26 @@ class _FuentesPageState extends State<FuentesPage> {
       ),
       actions: <Widget>[
         TextButton(
-          child: Text('Cancelar', style: TextStyle(color: tema.getScaffoldTextColor())),
+          child: Text(
+            'Cancelar',
+            style: TextStyle(
+              color: tema.getScaffoldTextColor(),
+              fontFamily: tema.font,
+            ),
+          ),
           onPressed: () {
             tema.setFont(fuentes[currentValue!]);
             Navigator.of(context).pop();
           },
         ),
         TextButton(
-          child: Text('Guardar', style: TextStyle(color: tema.getScaffoldTextColor())),
+          child: Text(
+            'Guardar',
+            style: TextStyle(
+              color: tema.getScaffoldTextColor(),
+              fontFamily: tema.font,
+            ),
+          ),
           onPressed: () {
             if (value != null) {
               tema.setFont(fuentes[value!]);

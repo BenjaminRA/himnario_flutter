@@ -563,15 +563,14 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
 
     return Stack(children: <Widget>[
       CupertinoPageScaffold(
-        backgroundColor: tema.getScaffoldBackgroundColor(),
         navigationBar: CupertinoNavigationBar(
-            backgroundColor: tema.getTabBackgroundColor(),
+            backgroundColor: tema.getAccentColor(),
             middle: Text(
               widget.titulo,
-              style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                    color: tema.getTabTextColor(),
-                    fontFamily: tema.font,
-                  ),
+              style: TextStyle(
+                color: tema.getAccentColorText(),
+                fontFamily: tema.font,
+              ),
             ),
             trailing: prefs != null
                 ? Transform.translate(
