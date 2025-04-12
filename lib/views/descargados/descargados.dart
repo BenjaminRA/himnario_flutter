@@ -23,6 +23,11 @@ class _DescargadosPageState extends State<DescargadosPage> with RouteAware {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      routeObserver.subscribe(this, ModalRoute.of(context)!);
+    });
+
     fetchData();
   }
 
@@ -54,12 +59,6 @@ class _DescargadosPageState extends State<DescargadosPage> with RouteAware {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context));
-  }
-
-  @override
   void dispose() {
     super.dispose();
     routeObserver.unsubscribe(this);
@@ -67,6 +66,7 @@ class _DescargadosPageState extends State<DescargadosPage> with RouteAware {
 
   @override
   void didPopNext() {
+    super.didPopNext();
     print('didPopNext');
     fetchData();
   }
@@ -97,7 +97,7 @@ class _DescargadosPageState extends State<DescargadosPage> with RouteAware {
     return CupertinoPageScaffold(
       backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
-        actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
+        // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
         backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
         middle: Text('Himnos Descargados',
             style: CupertinoTheme.of(context)

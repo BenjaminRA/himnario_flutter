@@ -7,41 +7,51 @@ import 'package:scoped_model/scoped_model.dart';
 class BotonVoz extends StatelessWidget {
   final bool activo;
   final String voz;
-  final Function onPressed;
+  final void Function() onPressed;
   final Color mainColor;
   final Color mainColorContrast;
 
   BotonVoz({
-    this.voz,
+    required this.voz,
     this.activo = false,
-    this.onPressed,
-    this.mainColor,
-    this.mainColorContrast,
+    required this.onPressed,
+    required this.mainColor,
+    required this.mainColorContrast,
   });
 
   Widget materialLayout(BuildContext context) {
     return !activo
-        ? OutlineButton(
-            color: Theme.of(context).backgroundColor,
+        ? OutlinedButton(
+            // style: ButtonStyle(
+            //   backgroundColor: WidgetStatePropertyAll(TemaModel.of(context).getAccentColor()),
+            // ),
             child: Text(
               voz,
-              style: TextStyle(fontFamily: Theme.of(context).textTheme.title.fontFamily, color: Theme.of(context).textTheme.body1.color),
+              // style: TextStyle(
+              //   fontFamily: !isAndroid() ? ScopedModel.of<TemaModel>(context).font : null,
+              //   color: TemaModel.of(context).getAccentColorText(),
+              // ),
             ),
-            onPressed: onPressed ?? () {},
+            onPressed: onPressed,
           )
-        : RaisedButton(
-            color: Theme.of(context).primaryColor,
+        : ElevatedButton(
+            // style: ButtonStyle(
+            //   backgroundColor: WidgetStatePropertyAll(TemaModel.of(context).getAccentColor()),
+            // ),
             child: Text(
               voz,
-              style: TextStyle(fontFamily: Theme.of(context).textTheme.title.fontFamily, color: Theme.of(context).primaryIconTheme.color),
+              // style: TextStyle(
+              //   fontFamily: !isAndroid() ? ScopedModel.of<TemaModel>(context).font : null,
+              //   color: TemaModel.of(context).getAccentColorText(),
+              // ),
             ),
-            onPressed: onPressed ?? () {},
+            onPressed: onPressed,
           );
   }
 
   Widget cupertinoLayout(BuildContext context) {
     return ScopedModelDescendant(
-      builder: (BuildContext context, Widget child, TemaModel tema) => !activo
+      builder: (BuildContext context, Widget? child, TemaModel tema) => !activo
           ? Container(
               height: 40.0,
               width: 120.0,
@@ -53,7 +63,7 @@ class BotonVoz extends StatelessWidget {
                   voz,
                   style: TextStyle(fontFamily: tema.font, color: Colors.black),
                 ),
-                onPressed: onPressed ?? () {},
+                onPressed: onPressed,
               ),
             )
           : Container(
@@ -67,7 +77,7 @@ class BotonVoz extends StatelessWidget {
                   voz,
                   style: TextStyle(fontFamily: tema.font, color: mainColorContrast),
                 ),
-                onPressed: onPressed ?? () {},
+                onPressed: onPressed,
               ),
             ),
     );

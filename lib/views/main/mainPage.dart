@@ -35,11 +35,7 @@ import 'package:Himnario/api/api.dart';
 import 'package:Himnario/models/tema.dart';
 
 class MainPage extends StatefulWidget {
-  final int? mainColor;
-  final String? font;
-  final Brightness brightness;
-
-  MainPage({this.mainColor, this.font, required this.brightness});
+  MainPage({Key? key}) : super(key: key);
 
   @override
   _MainPageState createState() => _MainPageState();
@@ -62,17 +58,13 @@ class _MainPageState extends State<MainPage> with RouteAware {
   // Android specific
   final GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
 
-  // iOS specific
-  late TemaModel tema;
-
   @override
   void initState() {
     super.initState();
 
-    tema = TemaModel()
-      ..setMainColor(Color(widget.mainColor ?? 4294309365))
-      ..setFont(widget.font ?? 'Merriweather')
-      ..setBrightness(widget.brightness);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      routeObserver.subscribe(this, ModalRoute.of(context)!);
+    });
 
     SharedPreferences.getInstance().then((value) {
       prefs = value;
@@ -81,7 +73,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
   }
 
   Future<void> getAnuncios(SharedPreferences prefs) async {
-    http.Response request = await http.get(Uri.dataFromString(DatabaseApi.getAnuncios()));
+    http.Response request = await http.get(Uri.parse(DatabaseApi.getAnuncios()));
     Map<String, dynamic> json = jsonDecode(request.body);
     List<String>? anuncios = prefs.getStringList('anuncios');
 
@@ -111,7 +103,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
         print('connected');
 
         String? date = prefs.getString('latest');
-        http.Response res = await http.post(Uri.dataFromString(DatabaseApi.checkUpdates()),
+        http.Response res = await http.post(Uri.parse(DatabaseApi.checkUpdates()),
             headers: {'Content-Type': 'application/json'},
             body: utf8.encode(json.encode({'latest': date != null ? date : '2018-08-19 05:01:46.447 +00:00'})));
         List<dynamic> latest = jsonDecode(res.body);
@@ -132,10 +124,9 @@ class _MainPageState extends State<MainPage> with RouteAware {
                     ),
                     Text(
                       'Actualizando Base de Datos',
-                      style: Theme.of(context)
-                          .textTheme
-                          .button
-                          .copyWith(color: Theme.of(context).brightness == Brightness.light ? Colors.white : Colors.black),
+                      style: TextStyle(
+                        color: TemaModel.of(context).getAccentColorText(),
+                      ),
                     )
                   ],
                 ),
@@ -150,7 +141,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
 
           setState(() => cargando = true);
           print('descargando');
-          http.Response request = await http.get(Uri.dataFromString(DatabaseApi.getDb()));
+          http.Response request = await http.get(Uri.parse(DatabaseApi.getDb()));
 
           // Favoritos
           List<int> favoritos = [];
@@ -170,8 +161,8 @@ class _MainPageState extends State<MainPage> with RouteAware {
           }
           transposedHImnos = Himno.fromJson((await DB.rawQuery('select * from himnos where transpose != 0')));
 
-          File(DB.path()).deleteSync();
-          File(DB.path()).writeAsBytesSync(request.bodyBytes);
+          File(await DB.getPath()).deleteSync();
+          File(await DB.getPath()).writeAsBytesSync(request.bodyBytes);
 
           await DB.execute('CREATE TABLE IF NOT EXISTS favoritos(himno_id int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
           await DB.execute('CREATE TABLE IF NOT EXISTS descargados(himno_id int, duracion int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
@@ -195,7 +186,9 @@ class _MainPageState extends State<MainPage> with RouteAware {
                     ),
                     Text(
                       'Base de Datos Actualizada',
-                      style: Theme.of(context).textTheme.button.copyWith(color: Colors.white),
+                      style: TextStyle(
+                        color: TemaModel.of(context).getAccentColorText(),
+                      ),
                     )
                   ],
                 ),
@@ -263,18 +256,15 @@ class _MainPageState extends State<MainPage> with RouteAware {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context));
-  }
-
-  @override
   void didPopNext() {
+    super.didPopNext();
     print('didPopNext');
     fetchCategorias();
   }
 
   List<MainMenuTile> mainMenuTiles(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     return [
       MainMenuTile(
         icon: Icon(Icons.favorite),
@@ -346,9 +336,11 @@ class _MainPageState extends State<MainPage> with RouteAware {
   }
 
   Widget materialLayout(BuildContext context) {
+    TemaModel tema = TemaModel.of(context);
+
     List<Widget> drawerList = [
       DrawerHeader(
-        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+        decoration: BoxDecoration(color: tema.getAccentColor()),
         child: Center(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -357,7 +349,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
               Text(
                 'Himnos y Cánticos del Evangelio',
                 textAlign: TextAlign.start,
-                style: TextStyle(color: Theme.of(context).primaryIconTheme.color, fontSize: 20.0),
+                style: TextStyle(color: tema.getAccentColorText(), fontSize: 20.0),
               )
             ],
           ),
@@ -370,7 +362,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
         ListTile(
           leading: tile.icon,
           title: Text(tile.title),
-          onTap: tile.onTap,
+          onTap: tile.onTap as GestureTapCallback?,
         ),
       );
     }
@@ -378,12 +370,15 @@ class _MainPageState extends State<MainPage> with RouteAware {
     return Scaffold(
       key: _globalKey,
       drawer: Drawer(
+        // backgroundColor: tema.getScaffoldBackgroundColor(),
         child: ListView(
           padding: EdgeInsets.zero,
           children: drawerList,
         ),
       ),
       appBar: AppBar(
+        // backgroundColor: tema.getAccentColor(),
+        // foregroundColor: tema.getAccentColorText(),
         title: Container(
           width: double.infinity,
           child: Text(
@@ -394,11 +389,11 @@ class _MainPageState extends State<MainPage> with RouteAware {
         actions: <Widget>[
           IconButton(
             onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (BuildContext context) =>
-                          Buscador(id: 0, subtema: false, type: currentPage == 0 ? BuscadorType.Himnos : BuscadorType.Coros)));
+              Navigator.push(context,
+                  getPageRoute(Buscador(id: 0, subtema: false, type: currentPage == 0 ? BuscadorType.Himnos : BuscadorType.Coros), tema: tema));
+              // MaterialPageRoute(
+              //     builder: (BuildContext context) =>
+              //         Buscador(id: 0, subtema: false, type: currentPage == 0 ? BuscadorType.Himnos : BuscadorType.Coros)));
             },
             icon: Icon(Icons.search),
           ),
@@ -433,9 +428,14 @@ class _MainPageState extends State<MainPage> with RouteAware {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentPage,
-        backgroundColor: Theme.of(context).primaryColor,
-        // selectedItemColor: Theme.of(context).indicatorColor,
-        unselectedItemColor: Theme.of(context).indicatorColor.withOpacity(0.5),
+        // backgroundColor: tema.getAccentColor(),
+        // Selected
+        // selectedItemColor: tema.getAccentColorText(),
+        // selectedIconTheme: IconThemeData(opacity: 1.0),
+
+        // Unselected
+        // unselectedItemColor: tema.getAccentColorText().withOpacity(0.7),
+        // unselectedIconTheme: IconThemeData(size: 20.0, opacity: 0.7),
         type: BottomNavigationBarType.fixed,
         onTap: (int e) {
           pageController.animateToPage(e, duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
@@ -443,19 +443,24 @@ class _MainPageState extends State<MainPage> with RouteAware {
         },
         items: [
           BottomNavigationBarItem(
-              backgroundColor: Theme.of(context).primaryColor,
-              icon: Icon(Icons.library_music, color: Theme.of(context).primaryIconTheme.color),
-              title: Text('Himnos', style: Theme.of(context).textTheme.button.copyWith(color: Theme.of(context).primaryIconTheme.color))),
+            // backgroundColor: Theme.of(context).primaryColor,
+            icon: Icon(Icons.library_music),
+            label: 'Himnos',
+          ),
           BottomNavigationBarItem(
-              backgroundColor: Theme.of(context).primaryColor,
-              icon: Icon(Icons.music_note, color: Theme.of(context).primaryIconTheme.color),
-              title: Text('Coros', style: Theme.of(context).textTheme.button.copyWith(color: Theme.of(context).primaryIconTheme.color))),
+            // backgroundColor: Theme.of(context).primaryColor,
+            icon: Icon(Icons.music_note),
+            label: 'Coros',
+          ),
         ],
       ),
       floatingActionButton: currentPage == 0
           ? FloatingActionButton(
+              // backgroundColor: getColorShade(tema.getAccentColor(), 0.2),
+              // foregroundColor: tema.getAccentColor(),
+              // tema.setBrightness(tema.brightness == Brightness.light ? Brightness.dark : Brightness.light);
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => QuickBuscador()));
+                Navigator.push(context, getPageRoute(QuickBuscador(), tema: tema));
               },
               child: Icon(Icons.dialpad),
             )
@@ -464,6 +469,8 @@ class _MainPageState extends State<MainPage> with RouteAware {
   }
 
   Widget cupertinoLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     void showCupertinoMenu() {
       showCupertinoModalPopup(
         context: context,
@@ -477,77 +484,68 @@ class _MainPageState extends State<MainPage> with RouteAware {
           ),
           actions: mainMenuTiles(context)
               .map((e) => CupertinoActionSheetAction(
-                    child: Text(e.title),
-                    onPressed: e.onTap,
+                    child: Text(e.title, style: TextStyle(color: tema.getScaffoldTextColor())),
+                    onPressed: e.onTap as VoidCallback,
                   ))
               .toList(),
         ),
       );
     }
 
-    return ScopedModel<TemaModel>(
-      model: tema,
-      child: Stack(
-        children: [
-          CupertinoTabScaffold(
-            tabBuilder: (BuildContext context, int index) {
-              if (index == 0) {
-                return HimnosTab(
-                  categorias: categorias,
-                  onRefresh: () => checkUpdates(prefs),
-                  showCupertinoMenu: showCupertinoMenu,
-                );
-              }
-
-              return CorosTab(
-                coros: coros,
+    return Stack(
+      children: [
+        CupertinoTabScaffold(
+          tabBuilder: (BuildContext context, int index) {
+            if (index == 0) {
+              return HimnosTab(
+                categorias: categorias,
                 onRefresh: () => checkUpdates(prefs),
                 showCupertinoMenu: showCupertinoMenu,
               );
-            },
-            tabBar: CupertinoTabBar(
-              backgroundColor: tema.getTabBackgroundColor(),
-              activeColor: tema.getTabTextColor(),
-              inactiveColor: tema.mainColorContrast == Colors.white || tema.brightness == Brightness.dark
-                  ? Colors.white.withOpacity(0.5)
-                  : Colors.black.withOpacity(0.5),
-              items: <BottomNavigationBarItem>[
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.library_music),
-                    title: Text('Himnos',
-                        style: CupertinoTheme.of(context)
-                            .textTheme
-                            .tabLabelTextStyle
-                            .copyWith(color: tema.brightness == Brightness.light ? tema.mainColorContrast : Colors.white, fontFamily: tema.font))),
-                BottomNavigationBarItem(
-                    icon: Icon(Icons.music_note),
-                    title: Text('Coros',
-                        style: CupertinoTheme.of(context)
-                            .textTheme
-                            .tabLabelTextStyle
-                            .copyWith(color: tema.brightness == Brightness.light ? tema.mainColorContrast : Colors.white, fontFamily: tema.font))),
-              ],
-            ),
+            }
+
+            return CorosTab(
+              coros: coros,
+              onRefresh: () => checkUpdates(prefs),
+              showCupertinoMenu: showCupertinoMenu,
+            );
+          },
+          tabBar: CupertinoTabBar(
+            activeColor: tema.getAccentColorText(),
+            iconSize: 25.0,
+            items: <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.library_music),
+                label: 'Himnos',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.music_note),
+                label: 'Coros',
+              ),
+            ],
           ),
-          Positioned(
-            left: -50.0,
-            bottom: 80.0,
-            child: AnimatedContainer(
-              transform: cargando ? Matrix4.translationValues(0.0, 0.0, 0.0) : Matrix4.translationValues(-50.0, 0.0, 0.0),
-              curve: Curves.easeOutSine,
-              duration: Duration(milliseconds: 1000),
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(5.0), color: tema.getAccentColor()),
-              width: 100.0,
-              height: 54.0,
-              child: Padding(
-                  padding: EdgeInsets.only(left: 50.0),
-                  child: CupertinoActivityIndicator(
-                    animating: true,
-                  )),
+        ),
+        Positioned(
+          left: -50.0,
+          bottom: 80.0,
+          child: AnimatedContainer(
+            transform: cargando ? Matrix4.translationValues(0.0, 0.0, 0.0) : Matrix4.translationValues(-50.0, 0.0, 0.0),
+            curve: Curves.easeOutSine,
+            duration: Duration(milliseconds: 1000),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5.0),
+              color: TemaModel.of(context).getAccentColorText(),
             ),
+            width: 100.0,
+            height: 54.0,
+            child: Padding(
+                padding: EdgeInsets.only(left: 50.0),
+                child: CupertinoActivityIndicator(
+                  animating: true,
+                )),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

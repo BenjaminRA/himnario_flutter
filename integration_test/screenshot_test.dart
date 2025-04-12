@@ -20,14 +20,14 @@ Future<void> waitForDisappearing(WidgetTester tester, Finder finder) async {
 }
 
 Future<void> main() async {
-  final IntegrationTestWidgetsFlutterBinding binding = IntegrationTestWidgetsFlutterBinding();
+  // final IntegrationTestWidgetsFlutterBinding binding = IntegrationTestWidgetsFlutterBinding();
 
-  testWidgets('screenshot', (WidgetTester tester) async {
-    await binding.convertFlutterSurfaceToImage();
+  // testWidgets('screenshot', (WidgetTester tester) async {
+  //   await binding.convertFlutterSurfaceToImage();
 
-    await tester.pumpWidget(MyApp());
+  //   await tester.pumpWidget(MyApp());
 
-    print('pumpAndSettle...');
-    await tester.pumpAndSettle();
-  });
+  //   print('pumpAndSettle...');
+  //   await tester.pumpAndSettle();
+  // });
 }

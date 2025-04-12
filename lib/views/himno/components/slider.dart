@@ -7,14 +7,12 @@ class VoicesProgressBar extends StatefulWidget {
   final int duration;
   final Function onSelected;
   final Function onDragStart;
-  final Brightness brightness;
 
   VoicesProgressBar({
-    this.currentProgress,
-    this.duration,
-    this.onSelected,
-    this.onDragStart,
-    this.brightness,
+    required this.currentProgress,
+    required this.duration,
+    required this.onSelected,
+    required this.onDragStart,
   });
 
   @override
@@ -22,8 +20,8 @@ class VoicesProgressBar extends StatefulWidget {
 }
 
 class _VoicesProgressBarState extends State<VoicesProgressBar> {
-  bool dragging;
-  double draggingProgress;
+  late bool dragging;
+  late double draggingProgress;
 
   @override
   void initState() {
@@ -81,7 +79,6 @@ class _VoicesProgressBarState extends State<VoicesProgressBar> {
       },
       child: CustomPaint(
         painter: CustomSlider(
-          brightness: widget.brightness,
           progress: dragging ? draggingProgress : widget.currentProgress,
           dragging: dragging,
           duration: widget.duration,
@@ -101,21 +98,24 @@ class CustomSlider extends CustomPainter {
   double progress;
   bool dragging;
   int duration;
-  Paint primaryColorPaint;
-  Paint geryColorPaint;
-  TextPainter text;
+  Paint primaryColorPaint = Paint()
+    ..color = Colors.black
+    ..strokeWidth = 10.0;
+  Paint secondaryColorPaint = Paint()
+    ..color = Colors.grey
+    ..strokeWidth = 10.0;
   BuildContext context;
-  Brightness brightness;
+
+  late TextPainter text;
 
   CustomSlider({
-    this.progress,
-    this.context,
-    this.dragging,
-    this.duration,
-    this.brightness,
+    required this.progress,
+    required this.context,
+    required this.dragging,
+    required this.duration,
   }) {
-    duration = duration == double.nan || duration == double.infinity ? 0.0 : duration;
-    progress = progress == double.nan || progress == double.infinity ? 0.0 : progress;
+    duration = (duration.isNaN || duration == double.infinity) ? 0 : duration;
+    progress = progress.isNaN || progress == double.infinity ? 0.0 : progress;
     text = TextPainter(
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
@@ -128,12 +128,12 @@ class CustomSlider extends CustomPainter {
         ),
       ),
     );
-    primaryColorPaint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 10.0;
-    geryColorPaint = Paint()
-      ..color = Colors.grey
-      ..strokeWidth = 10.0;
+    // primaryColorPaint = Paint()
+    //   ..color = Colors.black
+    //   ..strokeWidth = 10.0;
+    // secondaryColorPaint = Paint()
+    //   ..color = Colors.grey
+    //   ..strokeWidth = 10.0;
   }
 
   @override
@@ -141,7 +141,7 @@ class CustomSlider extends CustomPainter {
     double currentProgress = size.width * progress;
     double position = size.height * 0.65;
     canvas.drawLine(Offset(0.0, position), Offset(currentProgress, position), primaryColorPaint);
-    canvas.drawLine(Offset(currentProgress, position), Offset(size.width, position), geryColorPaint);
+    canvas.drawLine(Offset(currentProgress, position), Offset(size.width, position), secondaryColorPaint);
     if (dragging) {
       if (!isAndroid() || smallDevice(context))
         currentProgress = currentProgress > size.width - 90.0 ? size.width - 90.0 : currentProgress;

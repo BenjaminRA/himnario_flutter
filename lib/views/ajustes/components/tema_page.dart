@@ -27,40 +27,24 @@ class _TemasPageState extends State<TemasPage> {
   @override
   void initState() {
     super.initState();
-    loadThemes();
-  }
 
-  void loadThemes() async {
-    prefs = await SharedPreferences.getInstance();
-
-    dark = prefs!.getString('brightness') == Brightness.dark.toString() ? true : false;
+    // Brightness
+    dark = TemaModel.of(context, rebuildOnChange: false).brightness == Brightness.dark ? true : false;
     originalDark = dark;
+
+    // Color
     pickerColor = TemaModel.of(context, rebuildOnChange: false).mainColor;
     originalColor = pickerColor;
 
-    // if (isAndroid()) {
-    //   String temaJson = prefs.getString('temaPrincipal');
-    //   if (temaJson == null) {
-    //     pickerColor = Colors.black;
-    //   } else {
-    //     Map<dynamic, dynamic> json = jsonDecode(temaJson);
-    //     pickerColor = Color.fromRGBO(json['red'], json['green'], json['blue'], 1);
-    //   }
-    //   originalColor = originalColor;
-
-    //   dark = prefs.getString('brightness') == Brightness.dark.toString() ? true : false;
-    //   originalDark = dark;
-    // } else {
-    //   dark = prefs.getString('brightness') == Brightness.dark.toString() ? true : false;
-    //   originalDark = dark;
-    //   pickerColor = ScopedModel.of<TemaModel>(context).mainColor;
-    //   originalColor = pickerColor;
-    // }
-
-    setState(() {});
+    SharedPreferences.getInstance().then((value) {
+      prefs = value;
+      setState(() {});
+    });
   }
 
   Widget materialLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     List<Widget> _buttons = [];
     if (MediaQuery.of(context).size.width > 400)
       _buttons.addAll(
@@ -69,7 +53,7 @@ class _TemasPageState extends State<TemasPage> {
             onTap: () {
               dark = !dark;
               Brightness brightness = dark ? Brightness.dark : Brightness.light;
-              ScopedModel.of<TemaModel>(context).setBrightness(brightness);
+              tema.setBrightness(brightness);
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -80,7 +64,7 @@ class _TemasPageState extends State<TemasPage> {
                     if (value != null) {
                       dark = !dark;
                       Brightness brightness = dark ? Brightness.dark : Brightness.light;
-                      ScopedModel.of<TemaModel>(context).setBrightness(brightness);
+                      tema.setBrightness(brightness);
                     }
                   },
                 ),
@@ -90,25 +74,19 @@ class _TemasPageState extends State<TemasPage> {
           ),
           Divider(),
           TextButton(
-            child: Text(
-              'Cancelar',
-              style: TemaModel.of(context).getButtonTextStyle(context),
-            ),
+            child: Text('Cancelar'),
             onPressed: () {
-              ScopedModel.of<TemaModel>(context).setMainColor(originalColor);
-              ScopedModel.of<TemaModel>(context).setBrightness(originalDark ? Brightness.dark : Brightness.light);
+              tema.setMainColor(originalColor);
+              tema.setBrightness(originalDark ? Brightness.dark : Brightness.light);
               Navigator.of(context).pop();
             },
           ),
           TextButton(
-            child: Text(
-              'Guardar',
-              style: TemaModel.of(context).getButtonTextStyle(context),
-            ),
+            child: Text('Guardar'),
             onPressed: () {
               Brightness brightness = dark ? Brightness.dark : Brightness.light;
-              ScopedModel.of<TemaModel>(context).setMainColor(pickerColor);
-              ScopedModel.of<TemaModel>(context).setBrightness(brightness);
+              tema.setMainColor(pickerColor);
+              tema.setBrightness(brightness);
 
               prefs!.setInt('mainColor', pickerColor.value);
               prefs!.setString('brightness', brightness.toString());
@@ -131,7 +109,7 @@ class _TemasPageState extends State<TemasPage> {
                 onTap: () {
                   dark = !dark;
                   Brightness brightness = dark ? Brightness.dark : Brightness.light;
-                  ScopedModel.of<TemaModel>(context).setBrightness(brightness);
+                  tema.setBrightness(brightness);
                 },
                 child: SizedBox(
                   child: Row(
@@ -142,7 +120,7 @@ class _TemasPageState extends State<TemasPage> {
                         onChanged: (bool? value) {
                           dark = !dark;
                           Brightness brightness = dark ? Brightness.dark : Brightness.light;
-                          ScopedModel.of<TemaModel>(context).setBrightness(brightness);
+                          tema.setBrightness(brightness);
                         },
                       ),
                       Text('Tema Oscuro'),
@@ -151,30 +129,24 @@ class _TemasPageState extends State<TemasPage> {
                 ),
               ),
               Container(
-                margin: EdgeInsets.only(left: 20.0),
+                // margin: EdgeInsets.only(left: 20.0),
                 child: TextButton(
-                  child: Text(
-                    'Cancelar',
-                    style: TemaModel.of(context).getButtonTextStyle(context),
-                  ),
+                  child: Text('Cancelar'),
                   onPressed: () {
-                    ScopedModel.of<TemaModel>(context).setMainColor(originalColor);
-                    ScopedModel.of<TemaModel>(context).setBrightness(originalDark ? Brightness.dark : Brightness.light);
+                    tema.setMainColor(originalColor);
+                    tema.setBrightness(originalDark ? Brightness.dark : Brightness.light);
                     Navigator.of(context).pop();
                   },
                 ),
               ),
               Container(
-                margin: EdgeInsets.only(left: 20.0),
+                // margin: EdgeInsets.only(left: 20.0),
                 child: TextButton(
-                  child: Text(
-                    'Guardar',
-                    style: TemaModel.of(context).getButtonTextStyle(context),
-                  ),
+                  child: Text('Guardar'),
                   onPressed: () {
                     Brightness brightness = dark ? Brightness.dark : Brightness.light;
-                    ScopedModel.of<TemaModel>(context).setMainColor(pickerColor);
-                    ScopedModel.of<TemaModel>(context).setBrightness(brightness);
+                    tema.setMainColor(pickerColor);
+                    tema.setBrightness(brightness);
 
                     prefs!.setInt('mainColor', pickerColor.value);
                     prefs!.setString('brightness', brightness.toString());
@@ -196,13 +168,15 @@ class _TemasPageState extends State<TemasPage> {
         pickerColor: pickerColor,
         onColorChanged: (Color color) => setState(() {
           pickerColor = color;
-          ScopedModel.of<TemaModel>(context).setMainColor(color);
+          tema.setMainColor(color);
         }),
       ),
     );
   }
 
   Widget cupertinoLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     return CupertinoAlertDialog(
       actions: <Widget>[
         Column(
@@ -224,12 +198,13 @@ class _TemasPageState extends State<TemasPage> {
                         padding: EdgeInsets.only(right: 10.0),
                         child: Icon(
                           CupertinoIcons.brightness,
-                          color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black,
+                          color: tema.getScaffoldTextColor(),
                         ),
                       ),
                       Text('Tema Oscuro',
-                          style:
-                              TextStyle(color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black)),
+                          style: TextStyle(
+                            color: tema.getScaffoldTextColor(),
+                          )),
                     ],
                   ),
                   IgnorePointer(
@@ -245,8 +220,7 @@ class _TemasPageState extends State<TemasPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 TextButton(
-                  child: Text('Cancelar',
-                      style: TextStyle(color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black)),
+                  child: Text('Cancelar', style: TextStyle(color: tema.getScaffoldTextColor())),
                   onPressed: () {
                     ScopedModel.of<TemaModel>(context).setMainColor(originalColor);
                     ScopedModel.of<TemaModel>(context).setBrightness(originalDark ? Brightness.dark : Brightness.light);
@@ -256,7 +230,7 @@ class _TemasPageState extends State<TemasPage> {
                 TextButton(
                   child: Text(
                     'Guardar',
-                    style: TextStyle(color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black),
+                    style: TextStyle(color: tema.getScaffoldTextColor()),
                   ),
                   onPressed: () {
                     Brightness brightness = dark ? Brightness.dark : Brightness.light;

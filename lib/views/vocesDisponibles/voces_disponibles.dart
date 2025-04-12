@@ -6,9 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'package:sqflite/sqflite.dart';
 
 import 'package:Himnario/models/himnos.dart';
 
@@ -33,7 +31,7 @@ class _DisponiblesPageState extends State<DisponiblesPage> {
     setState(() => cargando = true);
     himnos = [];
 
-    http.Response res = await http.get(VoicesApi.voicesAvailable());
+    http.Response res = await http.get(Uri.parse(VoicesApi.voicesAvailable()));
 
     List<Map<String, dynamic>> data = await DB.rawQuery(
         "select himnos.id, himnos.titulo from himnos where himnos.id in ${(res.body.replaceFirst('[', '(')).replaceFirst(']', ')')} group by himnos.id order by himnos.id ASC");
@@ -87,7 +85,7 @@ class _DisponiblesPageState extends State<DisponiblesPage> {
     return CupertinoPageScaffold(
       backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
-        actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
+        // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
         backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
         middle: Text('Voces Disponibles',
             style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(

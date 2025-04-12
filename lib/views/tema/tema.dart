@@ -15,11 +15,15 @@ import 'package:Himnario/models/himnos.dart';
 import '../../main.dart';
 
 class TemaPage extends StatefulWidget {
-  TemaPage({this.id, this.subtema = false, this.tema});
-
   final int id;
   final bool subtema;
   final String tema;
+
+  TemaPage({
+    required this.id,
+    this.subtema = false,
+    required this.tema,
+  });
 
   @override
   _TemaPageState createState() => _TemaPageState();
@@ -32,6 +36,11 @@ class _TemaPageState extends State<TemaPage> with RouteAware {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      routeObserver.subscribe(this, ModalRoute.of(context)!);
+    });
+
     fetchHimnos();
   }
 
@@ -79,12 +88,6 @@ class _TemaPageState extends State<TemaPage> with RouteAware {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context));
-  }
-
-  @override
   void dispose() {
     super.dispose();
     routeObserver.unsubscribe(this);
@@ -92,6 +95,7 @@ class _TemaPageState extends State<TemaPage> with RouteAware {
 
   @override
   void didPopNext() {
+    super.didPopNext();
     print('didPopNext');
     fetchHimnos();
   }
@@ -148,7 +152,7 @@ class _TemaPageState extends State<TemaPage> with RouteAware {
     return CupertinoPageScaffold(
       backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
-        actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
+        // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
         backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
         middle: Text(widget.tema,
             style: CupertinoTheme.of(context)

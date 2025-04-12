@@ -15,9 +15,13 @@ import 'package:scoped_model/scoped_model.dart';
 class HimnosTab extends StatefulWidget {
   final List<Categoria> categorias;
   final Future<void> Function() onRefresh;
-  final Function showCupertinoMenu;
+  final void Function()? showCupertinoMenu;
 
-  HimnosTab({this.categorias, this.onRefresh, this.showCupertinoMenu});
+  HimnosTab({
+    required this.categorias,
+    required this.onRefresh,
+    this.showCupertinoMenu,
+  });
 
   @override
   State<HimnosTab> createState() => _HimnosTabState();
@@ -28,7 +32,7 @@ class _HimnosTabState extends State<HimnosTab> {
 
   @override
   void didUpdateWidget(HimnosTab oldWidget) {
-    final tema = isAndroid() ? null : ScopedModel.of<TemaModel>(context);
+    final tema = TemaModel.of(context);
 
     if (widget.categorias.isNotEmpty && listTiles.isEmpty) {
       listTiles = [];
@@ -37,12 +41,9 @@ class _HimnosTabState extends State<HimnosTab> {
       listTiles.add(
         HimnosListTile(
           title: "Todos",
-          route: getPageRoute(
-            TemaPage(
-              id: 0,
-              tema: 'Todos',
-            ),
-            tema: tema,
+          page: TemaPage(
+            id: 0,
+            tema: 'Todos',
           ),
         ),
       );
@@ -52,24 +53,18 @@ class _HimnosTabState extends State<HimnosTab> {
         listTiles.add(
           HimnosListTile(
             title: widget.categorias[i].categoria,
-            route: getPageRoute(
-              TemaPage(
-                id: widget.categorias[i].id,
-                tema: widget.categorias[i].categoria,
-              ),
-              tema: tema,
+            page: TemaPage(
+              id: widget.categorias[i].id,
+              tema: widget.categorias[i].categoria,
             ),
             subCategorias: widget.categorias[i].subCategorias
                 .map(
                   (e) => HimnosListTile(
                     title: e.subCategoria,
-                    route: getPageRoute(
-                      TemaPage(
-                        id: e.id,
-                        tema: e.subCategoria,
-                        subtema: true,
-                      ),
-                      tema: tema,
+                    page: TemaPage(
+                      id: e.id,
+                      tema: e.subCategoria,
+                      subtema: true,
                     ),
                   ),
                 )
@@ -89,12 +84,12 @@ class _HimnosTabState extends State<HimnosTab> {
   }
 
   Widget materialTab() {
+    final tema = TemaModel.of(context);
+
     return widget.categorias.isNotEmpty
         ? RefreshIndicator(
-            color: Theme.of(context).brightness == Brightness.light
-                ? (Theme.of(context).primaryIconTheme.color == Colors.black ? Colors.black : Theme.of(context).primaryColor)
-                : (Theme.of(context).accentTextTheme.body1.color == Colors.white ? Colors.white : Theme.of(context).accentColor),
-            onRefresh: widget.onRefresh ?? () {},
+            color: TemaModel.of(context).getAccentColor(),
+            onRefresh: widget.onRefresh,
             child: ListView.builder(
               padding: EdgeInsets.only(bottom: 80.0),
               itemCount: listTiles.length,
@@ -108,7 +103,7 @@ class _HimnosTabState extends State<HimnosTab> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              listTiles[index].route,
+                              getPageRoute(listTiles[index].page, tema: tema),
                             );
                           },
                           title: Text(listTiles[index].title),
@@ -142,7 +137,7 @@ class _HimnosTabState extends State<HimnosTab> {
                                           onTap: () {
                                             Navigator.push(
                                               context,
-                                              subCategoria.route,
+                                              getPageRoute(subCategoria.page, tema: tema),
                                             );
                                           },
                                           title: Text(subCategoria.title),
@@ -165,10 +160,10 @@ class _HimnosTabState extends State<HimnosTab> {
     final tema = ScopedModel.of<TemaModel>(context);
 
     return CupertinoPageScaffold(
-        backgroundColor: tema.getScaffoldBackgroundColor(),
+        // backgroundColor: tema.getScaffoldBackgroundColor(),
         navigationBar: CupertinoNavigationBar(
-          backgroundColor: tema.getTabBackgroundColor(),
-          actionsForegroundColor: tema.getTabTextColor(),
+          backgroundColor: tema.getAccentColor(),
+          // actionsForegroundColor: tema.getAccentColorText(),
           transitionBetweenRoutes: false,
           leading: CupertinoButton(
             onPressed: widget.showCupertinoMenu,
@@ -176,6 +171,7 @@ class _HimnosTabState extends State<HimnosTab> {
             child: Icon(
               Icons.menu,
               size: 30.0,
+              color: tema.getAccentColorText(),
             ),
           ),
           trailing: CupertinoButton(
@@ -191,11 +187,15 @@ class _HimnosTabState extends State<HimnosTab> {
               );
             },
             padding: EdgeInsets.only(bottom: 2.0),
-            child: Icon(CupertinoIcons.search, size: 30.0),
+            child: Icon(
+              CupertinoIcons.search,
+              size: 30.0,
+              color: tema.getAccentColorText(),
+            ),
           ),
           middle: Text(
             'Himnos del Evangelio',
-            style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(color: tema.getTabTextColor(), fontFamily: tema.font),
+            // style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(color: tema.getTabTextColor(), fontFamily: tema.font),
           ),
         ),
         child: SafeArea(
@@ -276,7 +276,7 @@ class _HimnosTabState extends State<HimnosTab> {
                                                           onPressed: () {
                                                             Navigator.push(
                                                               context,
-                                                              subCategoria.route,
+                                                              getPageRoute(subCategoria.page, tema: tema),
                                                             );
                                                           },
                                                           child: Container(

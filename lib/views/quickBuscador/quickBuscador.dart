@@ -18,29 +18,29 @@ class QuickBuscador extends StatefulWidget {
 }
 
 class _QuickBuscadorState extends State<QuickBuscador> {
-  bool done;
-  bool cargando;
-  String path;
-  String alignment;
-  Himno himno;
-  List<Parrafo> estrofas;
-  int max;
-  double fontSize;
+  bool done = false;
+  bool cargando = true;
+  String path = '';
+  String alignment = 'Izquierda';
+  Himno himno = Himno(titulo: 'Ingrese un número', numero: -1);
+  List<Parrafo> estrofas = [];
+  int max = 0;
+  double fontSize = 16.0;
 
   @override
   void initState() {
     super.initState();
-    path = '';
-    max = 0;
-    fontSize = 16.0;
-    done = false;
-    cargando = true;
-    estrofas = List<Parrafo>();
-    himno = Himno(titulo: 'Ingrese un número', numero: -1);
+    // path = '';
+    // max = 0;
+    // fontSize = 16.0;
+    // done = false;
+    // cargando = true;
+    // estrofas = List<Parrafo>();
+    // himno = Himno(titulo: 'Ingrese un número', numero: -1);
 
     SharedPreferences.getInstance().then((prefs) {
       setState(() {
-        alignment = prefs.getString('alignment');
+        alignment = prefs.getString('alignment') ?? 'Izquierda';
         cargando = false;
       });
     });
@@ -53,7 +53,7 @@ class _QuickBuscadorState extends State<QuickBuscador> {
       List<Map<String, dynamic>> himnoQuery = await DB.rawQuery('select himnos.id, himnos.titulo from himnos where himnos.id = $query');
       if (himnoQuery.isEmpty || int.parse(query) > 517)
         setState(() {
-          estrofas = List<Parrafo>();
+          estrofas = [];
           himno = Himno(titulo: 'No Encontrado', numero: -2);
           cargando = false;
         });
@@ -73,7 +73,7 @@ class _QuickBuscadorState extends State<QuickBuscador> {
       }
     } else
       setState(() {
-        estrofas = List<Parrafo>();
+        estrofas = [];
         himno = Himno(titulo: 'Ingrese un número', numero: -1);
         cargando = false;
       });
@@ -95,16 +95,16 @@ class _QuickBuscadorState extends State<QuickBuscador> {
                   textAlign: TextAlign.end,
                   textScaleFactor: 0.9,
                   style: TextStyle(
-                    color: Theme.of(context).textTheme.title.color,
-                    fontFamily: Theme.of(context).textTheme.title.fontFamily,
+                    color: TemaModel.of(context).getScaffoldTextColor(),
+                    fontFamily: TemaModel.of(context).font,
                     fontSize: 20.0,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               )),
           style: TextStyle(
-            color: Theme.of(context).textTheme.title.color,
-            fontFamily: Theme.of(context).textTheme.title.fontFamily,
+            color: TemaModel.of(context).getScaffoldTextColor(),
+            fontFamily: TemaModel.of(context).font,
             fontSize: 20.0,
             fontWeight: FontWeight.w500,
           ),
@@ -180,7 +180,7 @@ class _QuickBuscadorState extends State<QuickBuscador> {
     return CupertinoPageScaffold(
       backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
-          actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
+          // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
           backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
           middle: Padding(
             padding: EdgeInsets.only(right: 0.0),

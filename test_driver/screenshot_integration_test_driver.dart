@@ -35,20 +35,20 @@ Future<void> main() async {
     }
 
     await integrationDriver(
-      onScreenshot: (String screenshotName, List<int> screenshotBytes) async {
-        // if devices is not empty, add the underscore
-        device = device == '' || device.endsWith('_') ? device : '${device.toUpperCase()}_';
+        // onScreenshot: (String screenshotName, List<int> screenshotBytes) async {
+        //   // if devices is not empty, add the underscore
+        //   device = device == '' || device.endsWith('_') ? device : '${device.toUpperCase()}_';
 
-        final File image = await File(
-          path + '/$device$screenshotName.png',
-        ).create(recursive: true);
-        if (image.existsSync()) {
-          image.deleteSync();
-        }
-        image.writeAsBytesSync(screenshotBytes);
-        return true;
-      },
-    );
+        //   final File image = await File(
+        //     path + '/$device$screenshotName.png',
+        //   ).create(recursive: true);
+        //   if (image.existsSync()) {
+        //     image.deleteSync();
+        //   }
+        //   image.writeAsBytesSync(screenshotBytes);
+        //   return true;
+        // },
+        );
   } catch (e) {
     print('Error occurred: $e');
   }

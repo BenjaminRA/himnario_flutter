@@ -14,9 +14,13 @@ import 'package:scoped_model/scoped_model.dart';
 class CorosTab extends StatefulWidget {
   final List<Himno> coros;
   final Future<void> Function() onRefresh;
-  final Function showCupertinoMenu;
+  final void Function()? showCupertinoMenu;
 
-  CorosTab({this.coros, this.onRefresh, this.showCupertinoMenu});
+  CorosTab({
+    required this.coros,
+    required this.onRefresh,
+    this.showCupertinoMenu,
+  });
 
   @override
   State<CorosTab> createState() => _CorosTabState();
@@ -38,9 +42,7 @@ class _CorosTabState extends State<CorosTab> {
 
   Widget materialTab() {
     return RefreshIndicator(
-      color: Theme.of(context).brightness == Brightness.light
-          ? (Theme.of(context).primaryIconTheme.color == Colors.black ? Colors.black : Theme.of(context).primaryColor)
-          : (Theme.of(context).accentTextTheme.body1.color == Colors.white ? Colors.white : Theme.of(context).accentColor),
+      color: TemaModel.of(context).getAccentColor(),
       onRefresh: widget.onRefresh,
       child: CorosScroller(
         himnos: widget.coros,
@@ -56,7 +58,7 @@ class _CorosTabState extends State<CorosTab> {
       backgroundColor: tema.getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
         backgroundColor: tema.getTabBackgroundColor(),
-        actionsForegroundColor: tema.getTabTextColor(),
+        // actionsForegroundColor: tema.getTabTextColor(),
         transitionBetweenRoutes: false,
         leading: CupertinoButton(
           onPressed: widget.showCupertinoMenu,

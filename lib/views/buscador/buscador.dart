@@ -83,7 +83,7 @@ class _BuscadorState extends State<Buscador> {
       result.add(Himno(
         numero: himno['id'],
         titulo: himno['titulo'],
-        transpose: himno['transpose'],
+        transpose: himno['transpose'] ?? 0,
         descargado: descargas.containsKey(himno['id']),
         favorito: favoritos.containsKey(himno['id']),
       ));

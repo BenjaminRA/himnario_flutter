@@ -14,13 +14,13 @@ class MainMenuTile {
 
 class HimnosListTile {
   String title;
-  Route route;
+  Widget page;
   bool expanded;
   List<HimnosListTile> subCategorias;
 
   HimnosListTile({
     required this.title,
-    required this.route,
+    required this.page,
     this.expanded = false,
     this.subCategorias = const [],
   });

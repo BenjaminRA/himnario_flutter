@@ -6,11 +6,14 @@ import 'package:scoped_model/scoped_model.dart';
 
 class HimnoText extends StatelessWidget {
   final String alignment;
-
-  HimnoText({this.estrofas, this.fontSize, this.alignment = 'Izquierda'});
-
   final List<Parrafo> estrofas;
   final double fontSize;
+
+  HimnoText({
+    required this.estrofas,
+    required this.fontSize,
+    this.alignment = 'Izquierda',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +31,7 @@ class HimnoText extends StatelessWidget {
       default:
         align = TextAlign.left;
     }
-    List<TextSpan> parrafos = List<TextSpan>();
+    List<TextSpan> parrafos = [];
     for (Parrafo parrafo in estrofas) {
       if (parrafo.coro)
         parrafos.addAll([
@@ -81,17 +84,19 @@ class HimnoText extends StatelessWidget {
             ),
           )
         : ScopedModelDescendant(
-            builder: (BuildContext context, Widget child, TemaModel tema) => Container(
+            builder: (BuildContext context, Widget? child, TemaModel tema) => Container(
               padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
               child: Center(
                 child: RichText(
                   textDirection: TextDirection.ltr,
                   textAlign: align,
                   text: TextSpan(
-                      style: DefaultTextStyle.of(context)
-                          .style
-                          .copyWith(color: ScopedModel.of<TemaModel>(context).getScaffoldTextColor(), fontFamily: tema.font),
-                      children: parrafos),
+                    style: TextStyle(
+                      color: ScopedModel.of<TemaModel>(context).getScaffoldTextColor(),
+                      fontFamily: tema.font,
+                    ),
+                    children: parrafos,
+                  ),
                 ),
               ),
             ),

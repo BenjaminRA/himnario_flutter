@@ -1,7 +1,7 @@
 class Categoria {
   int id;
   String categoria;
-  late List<SubCategoria> subCategorias;
+  List<SubCategoria> subCategorias = [];
 
   Categoria({
     required this.id,

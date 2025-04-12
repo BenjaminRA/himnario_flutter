@@ -13,7 +13,7 @@ import 'package:path_provider/path_provider.dart';
 class DB {
   static String? _dbPath;
 
-  static Future<String> _getPath() async {
+  static Future<String> getPath() async {
     if (_dbPath == null) {
       String databasesPath = (await getApplicationDocumentsDirectory()).path;
       _dbPath = databasesPath + "/himnos.db";
@@ -29,7 +29,7 @@ class DB {
     print('actualVersion: $actualVersion');
     print('newVersion: $version');
     if (version == null || version != actualVersion) {
-      await copiarBase(await _getPath(), version == null, version == null ? 0.0 : parseVersion(version));
+      await copiarBase(await getPath(), version == null, version == null ? 0.0 : parseVersion(version));
       prefs.setString('version', actualVersion);
       prefs.remove('latest');
     }
@@ -98,7 +98,7 @@ class DB {
   }
 
   static Future<Null> execute(String sql, {List<dynamic>? arguments}) async {
-    Database db = await openDatabase(await _getPath());
+    Database db = await openDatabase(await getPath());
 
     await db.execute(sql, arguments);
 
@@ -106,7 +106,7 @@ class DB {
   }
 
   static dynamic rawQuery(String sql, {List<dynamic>? arguments}) async {
-    Database db = await openDatabase(await _getPath());
+    Database db = await openDatabase(await getPath());
 
     dynamic res = await db.rawQuery(sql, arguments);
 
@@ -116,7 +116,7 @@ class DB {
   }
 
   static dynamic rawInsert(String sql, {List<dynamic>? arguments}) async {
-    Database db = await openDatabase(await _getPath());
+    Database db = await openDatabase(await getPath());
 
     dynamic res = await db.rawInsert(sql, arguments);
 
@@ -126,7 +126,7 @@ class DB {
   }
 
   static dynamic rawDelete(String sql, {List<dynamic>? arguments}) async {
-    Database db = await openDatabase(await _getPath());
+    Database db = await openDatabase(await getPath());
 
     dynamic res = await db.rawDelete(sql, arguments);
 

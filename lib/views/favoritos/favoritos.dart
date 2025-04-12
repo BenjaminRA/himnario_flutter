@@ -23,6 +23,11 @@ class _FavoritosPageState extends State<FavoritosPage> with RouteAware {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      routeObserver.subscribe(this, ModalRoute.of(context)!);
+    });
+
     fetchData();
   }
 
@@ -55,12 +60,6 @@ class _FavoritosPageState extends State<FavoritosPage> with RouteAware {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context));
-  }
-
-  @override
   void dispose() {
     super.dispose();
     routeObserver.unsubscribe(this);
@@ -68,6 +67,7 @@ class _FavoritosPageState extends State<FavoritosPage> with RouteAware {
 
   @override
   void didPopNext() {
+    super.didPopNext();
     print('didPopNext');
     fetchData();
   }
@@ -98,7 +98,7 @@ class _FavoritosPageState extends State<FavoritosPage> with RouteAware {
     return CupertinoPageScaffold(
         backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
         navigationBar: CupertinoNavigationBar(
-          actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
+          // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
           backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
           middle: Text(
             'Favoritos',

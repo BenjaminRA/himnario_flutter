@@ -72,10 +72,15 @@ class _FuentesPageState extends State<FuentesPage> {
   }
 
   Widget cupertinoLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     List<Widget> botones = [];
     for (int i = 0; i < fuentes.length; ++i) {
       botones.add(CupertinoButton(
-          onPressed: () => setState(() => value = i),
+          onPressed: () {
+            tema.setFont(fuentes[i]);
+            setState(() => value = i);
+          },
           child: Row(
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -83,8 +88,9 @@ class _FuentesPageState extends State<FuentesPage> {
               Text(
                 fuentes[i],
                 style: TextStyle(
-                    fontFamily: fuentes[i],
-                    color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black),
+                  fontFamily: fuentes[i],
+                  color: tema.getScaffoldTextColor(),
+                ),
               ),
               IgnorePointer(
                 child: CupertinoSwitch(
@@ -104,20 +110,17 @@ class _FuentesPageState extends State<FuentesPage> {
       ),
       actions: <Widget>[
         TextButton(
-          child: Text(
-            'Cancelar',
-            style: TemaModel.of(context).getButtonTextStyle(context),
-          ),
-          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Cancelar', style: TextStyle(color: tema.getScaffoldTextColor())),
+          onPressed: () {
+            tema.setFont(fuentes[currentValue!]);
+            Navigator.of(context).pop();
+          },
         ),
         TextButton(
-          child: Text(
-            'Guardar',
-            style: TemaModel.of(context).getButtonTextStyle(context),
-          ),
+          child: Text('Guardar', style: TextStyle(color: tema.getScaffoldTextColor())),
           onPressed: () {
             if (value != null) {
-              ScopedModel.of<TemaModel>(context).setFont(fuentes[value!]);
+              tema.setFont(fuentes[value!]);
               prefs!.setString('font', fuentes[value!]);
             }
             setState(() {});

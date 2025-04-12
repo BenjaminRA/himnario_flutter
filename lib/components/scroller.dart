@@ -95,10 +95,10 @@ class _ScrollerState extends State<Scroller> {
                 itemBuilder: (BuildContext context, int index) {
                   bool selected = (scrollPosition - 15) ~/ ((MediaQuery.of(context).size.height - 129) / length) == index;
 
-                  Color color = selected && dragging ? tema.getScaffoldTextColor().withOpacity(0.8) : tema.getScaffoldTextColor();
+                  Color color = selected && dragging ? tema.getAccentColorText() : tema.getScaffoldTextColor();
 
                   return Container(
-                    color: selected && dragging ? tema.getAccentColor() : tema.getScaffoldBackgroundColor(),
+                    color: selected && dragging ? tema.getAccentColor() : Theme.of(context).scaffoldBackgroundColor,
                     child: ListTile(
                       onTap: () async {
                         await Navigator.push(
@@ -129,7 +129,10 @@ class _ScrollerState extends State<Scroller> {
                         child: Text(
                           ((widget.himnos[index].numero > 517 ? '' : '${widget.himnos[index].numero} - ') + '${widget.himnos[index].titulo}'),
                           softWrap: true,
-                          style: tema.getScaffoldTextStyle(context),
+                          style: TextStyle(
+                            color: color,
+                            fontFamily: ScopedModel.of<TemaModel>(context).font,
+                          ),
                         ),
                       ),
                       trailing: widget.himnos[index].descargado
@@ -402,35 +405,34 @@ class _ScrollerState extends State<Scroller> {
 class SideScroller extends CustomPainter {
   double position;
   bool dragging;
-  BuildContext context;
   int numero;
   List<Himno> himnos;
   double iPhoneXPadding;
+  late TemaModel tema;
 
   late Paint scrollBar;
   late Color textColor;
 
   SideScroller(
-    this.context, {
+    BuildContext context, {
     required this.position,
     required this.dragging,
     required this.numero,
     required this.himnos,
     this.iPhoneXPadding = 0.0,
   }) {
-    final TemaModel tema = TemaModel.of(context);
+    tema = TemaModel.of(context);
+    textColor = tema.getAccentColorText();
 
     if (isAndroid()) {
       scrollBar = Paint()
-        ..color = dragging ? (Theme.of(context).brightness == Brightness.light ? Colors.black : Theme.of(context).cardColor) : Colors.grey
+        ..color = dragging ? tema.getAccentColor() : Colors.grey.withOpacity(0.5)
         ..strokeWidth = 10.0
         ..strokeCap = StrokeCap.round;
     } else {
       textColor = tema.brightness == Brightness.light ? Colors.white : tema.getTabTextColor();
       scrollBar = Paint()
-        ..color = dragging
-            ? (tema.brightness == Brightness.light ? CupertinoTheme.of(context).primaryColor : tema.getTabBackgroundColor().withOpacity(1.0))
-            : Colors.grey.withOpacity(0.5)
+        ..color = dragging ? tema.getAccentColor() : Colors.grey.withOpacity(0.5)
         ..strokeWidth = 5.0
         ..strokeCap = StrokeCap.round;
     }

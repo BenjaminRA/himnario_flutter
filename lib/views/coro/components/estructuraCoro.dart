@@ -37,6 +37,8 @@ class CoroText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tema = ScopedModel.of<TemaModel>(context);
+
     TextAlign align;
     switch (alignment) {
       case 'Izquierda':
@@ -54,15 +56,15 @@ class CoroText extends StatelessWidget {
 
     List<TextSpan> parrafos = [];
     for (Parrafo parrafo in estrofas) {
-      List<String> lineasAcordes = parrafo.acordes.isNotEmpty
+      List<String> lineasAcordes = parrafo.acordes != null && parrafo.acordes!.isNotEmpty
           ? notation == 'americana'
-              ? Acordes.toAmericano(parrafo.acordes).split('\n')
-              : parrafo.acordes.split('\n')
+              ? Acordes.toAmericano(parrafo.acordes!)!.split('\n')
+              : parrafo.acordes!.split('\n')
           : [];
 
       List<String> lineasParrafos = parrafo.parrafo.split('\n');
 
-      Color color = TemaModel.of(context).getScaffoldTextColor();
+      Color color = tema.getScaffoldTextColor();
 
       if (parrafo.coro) {
         parrafos.add(
@@ -75,9 +77,9 @@ class CoroText extends StatelessWidget {
                     fontSize: fontSize,
                   )
                 : TextStyle(
-                    color: ScopedModel.of<TemaModel>(context).getScaffoldTextColor(),
+                    color: tema.getScaffoldTextColor(),
                     fontStyle: FontStyle.italic,
-                    fontFamily: ScopedModel.of<TemaModel>(context).font,
+                    fontFamily: tema.font,
                     fontWeight: FontWeight.w300,
                     fontSize: fontSize,
                   ),
@@ -102,8 +104,13 @@ class CoroText extends StatelessWidget {
                       ),
                     ),
               TextSpan(
-                  text: lineasParrafos[i] + (i == lineasParrafos.length - 1 ? '\n\n' : '\n'),
-                  style: TextStyle(fontStyle: FontStyle.italic, fontSize: fontSize)),
+                text: lineasParrafos[i] + (i == lineasParrafos.length - 1 ? '\n\n' : '\n'),
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  fontSize: fontSize,
+                  color: tema.getScaffoldTextColor(),
+                ),
+              ),
             ],
           );
         }
@@ -143,7 +150,8 @@ class CoroText extends StatelessWidget {
             style: isAndroid()
                 ? DefaultTextStyle.of(context).style
                 : DefaultTextStyle.of(context).style.copyWith(
-                      fontFamily: ScopedModel.of<TemaModel>(context).font,
+                      fontFamily: tema.font,
+                      color: tema.getScaffoldTextColor(),
                     ),
             children: parrafos,
           ),

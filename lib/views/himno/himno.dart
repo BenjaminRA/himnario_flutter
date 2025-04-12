@@ -166,16 +166,20 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
         await audioVoces[i].setReleaseMode(ReleaseMode.stop);
       }
     positionSubscription = audioVoces[4].onPositionChanged.listen((Duration duration) {
-      setState(() {
-        currentProgress = duration.inMilliseconds / totalDuration;
-        currentDuration = duration;
-      });
+      if (mounted) {
+        setState(() {
+          currentProgress = duration.inMilliseconds / totalDuration;
+          currentDuration = duration;
+        });
+      }
     });
     completeSubscription = audioVoces[4].onPlayerComplete.listen((_) {
-      setState(() {
-        start = false;
-        currentProgress = 0.0;
-      });
+      if (mounted) {
+        setState(() {
+          start = false;
+          currentProgress = 0.0;
+        });
+      }
     });
 
     if (cliente != null && mounted) {
@@ -313,16 +317,20 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
       }
 
     positionSubscription = audioVoces[4].onPositionChanged.listen((Duration duration) {
-      setState(() {
-        currentProgress = duration.inMilliseconds / totalDuration;
-        currentDuration = duration;
-      });
+      if (mounted) {
+        setState(() {
+          currentProgress = duration.inMilliseconds / totalDuration;
+          currentDuration = duration;
+        });
+      }
     });
     completeSubscription = audioVoces[4].onPlayerComplete.listen((_) {
-      setState(() {
-        start = false;
-        currentProgress = 0.0;
-      });
+      if (mounted) {
+        setState(() {
+          start = false;
+          currentProgress = 0.0;
+        });
+      }
     });
 
     if (cliente != null && mounted) {
@@ -407,42 +415,54 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
     }
     if (currentVoice == 4) {
       positionSubscription = audioVoces[index].onPositionChanged.listen((Duration duration) {
-        setState(() {
-          currentProgress = duration.inMilliseconds / totalDuration;
-          currentDuration = duration;
-        });
+        if (mounted) {
+          setState(() {
+            currentProgress = duration.inMilliseconds / totalDuration;
+            currentDuration = duration;
+          });
+        }
       });
       completeSubscription = audioVoces[index].onPlayerComplete.listen((_) {
-        setState(() {
-          start = false;
-          currentProgress = 0.0;
-        });
+        if (mounted) {
+          setState(() {
+            start = false;
+            currentProgress = 0.0;
+          });
+        }
       });
     } else if (currentVoice == index) {
       positionSubscription = audioVoces[4].onPositionChanged.listen((Duration duration) {
-        setState(() {
-          currentProgress = duration.inMilliseconds / totalDuration;
-          currentDuration = duration;
-        });
+        if (mounted) {
+          setState(() {
+            currentProgress = duration.inMilliseconds / totalDuration;
+            currentDuration = duration;
+          });
+        }
       });
       completeSubscription = audioVoces[4].onPlayerComplete.listen((_) {
-        setState(() {
-          start = false;
-          currentProgress = 0.0;
-        });
+        if (mounted) {
+          setState(() {
+            start = false;
+            currentProgress = 0.0;
+          });
+        }
       });
     } else {
       positionSubscription = audioVoces[index].onPositionChanged.listen((Duration duration) {
-        setState(() {
-          currentProgress = duration.inMilliseconds / totalDuration;
-          currentDuration = duration;
-        });
+        if (mounted) {
+          setState(() {
+            currentProgress = duration.inMilliseconds / totalDuration;
+            currentDuration = duration;
+          });
+        }
       });
       completeSubscription = audioVoces[index].onPlayerComplete.listen((_) {
-        setState(() {
-          start = false;
-          currentProgress = 0.0;
-        });
+        if (mounted) {
+          setState(() {
+            start = false;
+            currentProgress = 0.0;
+          });
+        }
       });
     }
     currentVoice = currentVoice == index ? 4 : index;
@@ -846,6 +866,8 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
   }
 
   Widget cupertinoLayout() {
+    final _tema = TemaModel.of(context);
+
     List<Widget> modalButtons = [
       CupertinoActionSheetAction(
         isDestructiveAction: descargado,
@@ -853,8 +875,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
           toggleDescargado();
           Navigator.of(context).pop();
         },
-        child: Text(descargado ? 'Eliminar' : 'Descargar',
-            style: TextStyle(color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black)),
+        child: Text(descargado ? 'Eliminar' : 'Descargar', style: TextStyle(color: _tema.getScaffoldTextColor())),
       ),
     ];
 
@@ -864,8 +885,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
           switchModes();
           Navigator.of(context).pop();
         },
-        child: Text(modoVoces ? 'Ocultar Voces' : 'Mostrar Voces',
-            style: TextStyle(color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black)),
+        child: Text(modoVoces ? 'Ocultar Voces' : 'Mostrar Voces', style: TextStyle(color: _tema.getScaffoldTextColor())),
       ));
     }
 
@@ -876,24 +896,17 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
           setState(() => sheet = !sheet);
           Navigator.of(context).pop();
         },
-        child: Text(sheet ? 'Ocultar Partitura' : 'Mostrar Partitura',
-            style: TextStyle(color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark ? Colors.white : Colors.black)),
+        child: Text(sheet ? 'Ocultar Partitura' : 'Mostrar Partitura', style: TextStyle(color: _tema.getScaffoldTextColor())),
       ));
     }
 
     return CupertinoPageScaffold(
-      backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
+      // backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
       navigationBar: CupertinoNavigationBar(
         transitionBetweenRoutes: true,
         // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
-        backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
-        middle: Text(
-          '${widget.numero} - ${widget.titulo}',
-          style: CupertinoTheme.of(context)
-              .textTheme
-              .textStyle
-              .copyWith(color: ScopedModel.of<TemaModel>(context).getTabTextColor(), fontFamily: ScopedModel.of<TemaModel>(context).font),
-        ),
+        // backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
+        middle: Text('${widget.numero} - ${widget.titulo}'),
         trailing: prefs != null
             ? Transform.translate(
                 offset: Offset(20.0, 0.0),
@@ -907,10 +920,12 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
                           ? Icon(
                               Icons.star,
                               size: 30.0,
+                              color: _tema.getAccentColorText(),
                             )
                           : Icon(
                               Icons.star_border,
                               size: 30.0,
+                              color: _tema.getAccentColorText(),
                             ),
                     ),
                     CupertinoButton(
@@ -934,6 +949,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
                       child: Icon(
                         Icons.more_vert,
                         size: 30.0,
+                        color: _tema.getAccentColorText(),
                       ),
                     ),
                   ],
@@ -947,13 +963,15 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
                 Padding(
                   padding: EdgeInsets.only(bottom: switchModeController.value * (smallDevice(context) ? 185.0 : 140.0)),
                   child: BodyHimno(
-                      alignment: prefs!.getString('alignment') ?? 'Izquierda',
-                      estrofas: estrofas,
-                      initFontSizePortrait: initFontSizePortrait,
-                      initFontSizeLandscape: initFontSizeLandscape,
-                      tema: tema,
-                      subTema: subTema,
-                      temaId: temaId),
+                    switchValue: switchModeController.value,
+                    alignment: prefs!.getString('alignment') ?? 'Izquierda',
+                    estrofas: estrofas,
+                    initFontSizePortrait: initFontSizePortrait,
+                    initFontSizeLandscape: initFontSizeLandscape,
+                    tema: tema,
+                    subTema: subTema,
+                    temaId: temaId,
+                  ),
                 ),
                 musicSheetLayout(),
                 voicesControlsLayout(),

@@ -32,15 +32,15 @@ class Himno {
 }
 
 class Parrafo {
-  int numero;
+  // int numero;
   int orden;
   bool coro;
   String parrafo;
-  String acordes;
-  String acordesAmericano;
+  String? acordes;
+  String? acordesAmericano;
 
   Parrafo({
-    required this.numero,
+    // required this.numero,
     required this.orden,
     required this.coro,
     required this.parrafo,
@@ -54,11 +54,11 @@ class Parrafo {
     for (var x in res) {
       if (x['coro'] == 0) ++numeroEstrofa;
       parrafos.add(Parrafo(
-        numero: x['numero'],
+        // numero: x['numero'],
         orden: numeroEstrofa,
         coro: x['coro'] == 1 ? true : false,
         parrafo: x['parrafo'],
-        acordes: x['acordes'],
+        acordes: x['acordes'] ?? null,
         acordesAmericano: Acordes.toAmericano(x['acordes']),
       ));
     }
@@ -97,8 +97,9 @@ abstract class Acordes {
     return original;
   }
 
-  static String toAmericano(String original) {
-    // if (original == null || original == '') return null;
+  static String? toAmericano(String? original) {
+    if (original == null || original == '') return null;
+
     String aux = '';
     List<String> lineas = original.split('\n');
 

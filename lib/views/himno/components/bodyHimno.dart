@@ -15,14 +15,14 @@ class BodyHimno extends StatefulWidget {
   final int temaId;
 
   BodyHimno({
-    this.estrofas,
-    this.alignment,
-    this.switchValue,
-    this.tema,
-    this.subTema,
-    this.temaId,
-    this.initFontSizePortrait,
-    this.initFontSizeLandscape,
+    required this.estrofas,
+    required this.alignment,
+    required this.switchValue,
+    required this.tema,
+    required this.subTema,
+    required this.temaId,
+    required this.initFontSizePortrait,
+    required this.initFontSizeLandscape,
   });
 
   @override
@@ -30,11 +30,11 @@ class BodyHimno extends StatefulWidget {
 }
 
 class _BodyHimnoState extends State<BodyHimno> {
-  ScrollController controller;
-  double fontSizePortrait;
-  double initFontSizePortrait;
-  double fontSizeLandscape;
-  double initFontSizeLandscape;
+  ScrollController controller = ScrollController();
+  late double fontSizePortrait;
+  late double initFontSizePortrait;
+  late double fontSizeLandscape;
+  late double initFontSizeLandscape;
 
   @override
   void initState() {
@@ -46,7 +46,6 @@ class _BodyHimnoState extends State<BodyHimno> {
     // Landscape Font Size
     initFontSizeLandscape = widget.initFontSizeLandscape;
     fontSizeLandscape = initFontSizeLandscape;
-    controller = ScrollController();
   }
 
   Widget materialLayout() {

@@ -70,10 +70,10 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
     estrofas = Parrafo.fromJson(parrafos);
 
     for (Parrafo parrafo in estrofas) {
-      acordesDisponible = parrafo.acordes != null && parrafo.acordes.split('\n')[0] != '' && parrafo.acordes != '';
+      acordesDisponible = parrafo.acordes != null && parrafo.acordes!.split('\n')[0] != '' && parrafo.acordes != '';
       print(acordesDisponible);
       if (acordesDisponible) {
-        parrafo.acordes = Acordes.transpose(transpose, parrafo.acordes.split('\n')).join('\n');
+        parrafo.acordes = Acordes.transpose(transpose, parrafo.acordes!.split('\n')).join('\n');
       }
       for (String linea in parrafo.parrafo.split('\n')) {
         if (linea.length > max) max = linea.length;
@@ -118,7 +118,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
   void applyTranspose(int value) async {
     transpose = transpose + value;
     for (Parrafo parrafo in estrofas) {
-      parrafo.acordes = Acordes.transpose(value, parrafo.acordes.split('\n')).join('\n');
+      parrafo.acordes = Acordes.transpose(value, parrafo.acordes!.split('\n')).join('\n');
     }
 
     await DB.rawQuery('update himnos set transpose = ${transpose % 12} where id = ${widget.numero}');
@@ -227,21 +227,38 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
   }
 
   Widget renderTransposingBar() {
+    final tema = TemaModel.of(context);
+
     Widget _materialBar() => ButtonBar(
           alignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             TextButton.icon(
-              icon: Icon(Icons.arrow_drop_down),
-              label: Text(smallDevice(context) ? '-' : 'Bajar Tono'),
+              icon: Icon(
+                Icons.arrow_drop_down,
+                color: tema.getScaffoldTextColor(),
+              ),
+              label: Text(
+                smallDevice(context) ? '-' : 'Bajar Tono',
+                style: TextStyle(color: tema.getAccentColorText()),
+              ),
               onPressed: () => applyTranspose(-1),
             ),
             TextButton.icon(
-              icon: Icon(Icons.arrow_drop_up),
-              label: Text(smallDevice(context) ? '+' : 'Subir Tono'),
+              icon: Icon(
+                Icons.arrow_drop_up,
+                color: tema.getScaffoldTextColor(),
+              ),
+              label: Text(
+                smallDevice(context) ? '+' : 'Subir Tono',
+                style: TextStyle(color: tema.getAccentColorText()),
+              ),
               onPressed: () => applyTranspose(1),
             ),
             OutlinedButton(
-              child: Text('Ok'),
+              child: Text(
+                'Ok',
+                style: TextStyle(color: tema.getScaffoldTextColor()),
+              ),
               onPressed: () => setState(() => transposeMode = !transposeMode),
             )
           ],
@@ -256,13 +273,13 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                 children: <Widget>[
                   Icon(
                     Icons.arrow_drop_down,
-                    color: ScopedModel.of<TemaModel>(context).getTabTextColor(),
+                    color: tema.getScaffoldTextColor(),
                   ),
                   Text(
                     smallDevice(context) ? '-' : 'Bajar Tono',
                     style: DefaultTextStyle.of(context).style.copyWith(
-                          color: ScopedModel.of<TemaModel>(context).getTabTextColor(),
-                          fontFamily: ScopedModel.of<TemaModel>(context).font,
+                          color: tema.getScaffoldTextColor(),
+                          fontFamily: tema.font,
                         ),
                   )
                 ],
@@ -275,13 +292,13 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                 children: <Widget>[
                   Icon(
                     Icons.arrow_drop_up,
-                    color: ScopedModel.of<TemaModel>(context).getTabTextColor(),
+                    color: tema.getScaffoldTextColor(),
                   ),
                   Text(
                     smallDevice(context) ? '+' : 'Subir Tono',
                     style: DefaultTextStyle.of(context).style.copyWith(
-                          color: ScopedModel.of<TemaModel>(context).getScaffoldTextColor(),
-                          fontFamily: ScopedModel.of<TemaModel>(context).font,
+                          color: tema.getScaffoldTextColor(),
+                          fontFamily: tema.font,
                         ),
                   )
                 ],
@@ -292,9 +309,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
               padding: EdgeInsets.only(bottom: 4.0),
               child: Text(
                 'Ok',
-                style: DefaultTextStyle.of(context)
-                    .style
-                    .copyWith(color: ScopedModel.of<TemaModel>(context).getTabTextColor(), fontFamily: ScopedModel.of<TemaModel>(context).font),
+                style: TextStyle(color: tema.getScaffoldTextColor(), fontFamily: tema.font),
               ),
               onPressed: () => setState(() => transposeMode = !transposeMode),
             )
@@ -353,6 +368,8 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
   }
 
   Widget renderAutoScroll() {
+    final tema = TemaModel.of(context);
+
     return Align(
       alignment: Alignment.bottomCenter,
       child: AnimatedContainer(
@@ -367,7 +384,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
               offset: Offset(0.0, 18.0),
             ),
           ],
-          color: isAndroid() ? Theme.of(context).scaffoldBackgroundColor : ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
+          color: tema.getScaffoldBackgroundColor(),
         ),
         child: ButtonBar(
           alignment: MainAxisAlignment.spaceEvenly,
@@ -375,22 +392,23 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
             TextButton(
               child: Icon(
                 Icons.fast_rewind,
-                color: !isAndroid() ? ScopedModel.of<TemaModel>(context).getTabTextColor() : null,
+                color: tema.getScaffoldTextColor(),
               ),
-              onPressed: autoScrollSpeedUp,
+              onPressed: autoScrollSpeedDown,
             ),
             TextButton(
               child: Row(
                 children: <Widget>[
                   Icon(
                     autoScroll ? Icons.pause : Icons.play_arrow,
-                    color: !isAndroid() ? ScopedModel.of<TemaModel>(context).getTabTextColor() : null,
+                    color: tema.getScaffoldTextColor(),
                   ),
                   Text(
                     '${autoScrollRate + 1}x',
-                    style: !isAndroid()
-                        ? CupertinoTheme.of(context).textTheme.textStyle.copyWith(color: ScopedModel.of<TemaModel>(context).getTabTextColor())
-                        : null,
+                    style: TextStyle(
+                      fontFamily: tema.font,
+                      color: tema.getScaffoldTextColor(),
+                    ),
                   ),
                 ],
               ),
@@ -399,7 +417,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
             TextButton(
               child: Icon(
                 Icons.fast_forward,
-                color: !isAndroid() ? ScopedModel.of<TemaModel>(context).getTabTextColor() : null,
+                color: tema.getScaffoldTextColor(),
               ),
               onPressed: autoScrollSpeedUp,
             ),
@@ -541,17 +559,19 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
   }
 
   Widget cupertinoLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     return Stack(children: <Widget>[
       CupertinoPageScaffold(
-        backgroundColor: ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor(),
+        backgroundColor: tema.getScaffoldBackgroundColor(),
         navigationBar: CupertinoNavigationBar(
-            backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
+            backgroundColor: tema.getTabBackgroundColor(),
             middle: Text(
               widget.titulo,
-              style: CupertinoTheme.of(context)
-                  .textTheme
-                  .textStyle
-                  .copyWith(color: ScopedModel.of<TemaModel>(context).getTabTextColor(), fontFamily: ScopedModel.of<TemaModel>(context).font),
+              style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
+                    color: tema.getTabTextColor(),
+                    fontFamily: tema.font,
+                  ),
             ),
             trailing: prefs != null
                 ? Transform.translate(
@@ -566,10 +586,12 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                               ? Icon(
                                   Icons.star,
                                   size: 30.0,
+                                  color: tema.getAccentColorText(),
                                 )
                               : Icon(
                                   Icons.star_border,
                                   size: 30.0,
+                                  color: tema.getAccentColorText(),
                                 ),
                         ),
                         CupertinoButton(
@@ -591,9 +613,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                                                 child: Text(
                                                   (fontController.value == 1 ? 'Ocultar' : 'Mostrar') + ' Acordes',
                                                   style: TextStyle(
-                                                    color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark
-                                                        ? Colors.white
-                                                        : Colors.black,
+                                                    color: tema.getScaffoldTextColor(),
                                                   ),
                                                 ),
                                               ),
@@ -602,9 +622,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                                                 child: Text(
                                                   'Transponer',
                                                   style: TextStyle(
-                                                    color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark
-                                                        ? Colors.white
-                                                        : Colors.black,
+                                                    color: tema.getScaffoldTextColor(),
                                                   ),
                                                 ),
                                               ),
@@ -613,9 +631,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                                                 child: Text(
                                                   'Tono Original',
                                                   style: TextStyle(
-                                                    color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark
-                                                        ? Colors.white
-                                                        : Colors.black,
+                                                    color: tema.getScaffoldTextColor(),
                                                   ),
                                                 ),
                                               ),
@@ -627,9 +643,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                                                           ? 'americana'
                                                           : 'latina'),
                                                   style: TextStyle(
-                                                    color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark
-                                                        ? Colors.white
-                                                        : Colors.black,
+                                                    color: tema.getScaffoldTextColor(),
                                                   ),
                                                 ),
                                               ),
@@ -638,9 +652,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                                                 child: Text(
                                                   'Scroll Automático',
                                                   style: TextStyle(
-                                                    color: WidgetsBinding.instance.window.platformBrightness == Brightness.dark
-                                                        ? Colors.white
-                                                        : Colors.black,
+                                                    color: tema.getScaffoldTextColor(),
                                                   ),
                                                 ),
                                               ),
@@ -652,6 +664,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                           child: Icon(
                             Icons.more_vert,
                             size: 30.0,
+                            color: tema.getAccentColorText(),
                           ),
                         ),
                       ],
