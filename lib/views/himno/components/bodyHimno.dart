@@ -1,11 +1,12 @@
 import 'package:Himnario/helpers/isAndroid.dart';
 import 'package:Himnario/models/himnos.dart';
+import 'package:Himnario/models/tema.dart';
 import 'package:flutter/material.dart';
 
 import 'estructuraHimno.dart';
 
 class BodyHimno extends StatefulWidget {
-  final String alignment;
+  final TemaAlignment alignment;
   final double initFontSizePortrait;
   final double initFontSizeLandscape;
   final List<Parrafo> estrofas;
@@ -39,7 +40,7 @@ class _BodyHimnoState extends State<BodyHimno> {
   @override
   void initState() {
     super.initState();
-    // Protrait Font Size
+    // Portrait Font Size
     initFontSizePortrait = widget.initFontSizePortrait;
     fontSizePortrait = initFontSizePortrait;
 

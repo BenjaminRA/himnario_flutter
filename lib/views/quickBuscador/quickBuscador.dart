@@ -80,6 +80,8 @@ class _QuickBuscadorState extends State<QuickBuscador> {
   }
 
   Widget materialLayout() {
+    final tema = TemaModel.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: TextField(
@@ -87,7 +89,7 @@ class _QuickBuscadorState extends State<QuickBuscador> {
           autofocus: true,
           decoration: InputDecoration(
               filled: true,
-              fillColor: Theme.of(context).canvasColor,
+              fillColor: tema.getScaffoldBackgroundColor(),
               suffix: Container(
                 width: MediaQuery.of(context).size.width - 200,
                 child: Text(
@@ -95,16 +97,16 @@ class _QuickBuscadorState extends State<QuickBuscador> {
                   textAlign: TextAlign.end,
                   textScaleFactor: 0.9,
                   style: TextStyle(
-                    color: TemaModel.of(context).getScaffoldTextColor(),
-                    fontFamily: TemaModel.of(context).font,
+                    color: tema.getScaffoldTextColor(),
+                    fontFamily: tema.font,
                     fontSize: 20.0,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               )),
           style: TextStyle(
-            color: TemaModel.of(context).getScaffoldTextColor(),
-            fontFamily: TemaModel.of(context).font,
+            color: tema.getScaffoldTextColor(),
+            fontFamily: tema.font,
             fontSize: 20.0,
             fontWeight: FontWeight.w500,
           ),
@@ -146,7 +148,7 @@ class _QuickBuscadorState extends State<QuickBuscador> {
                   child: Container(
                     height: double.infinity,
                     width: double.infinity,
-                    color: Colors.transparent,
+                    color: tema.getScaffoldBackgroundColor(),
                     child: Column(
                       children: <Widget>[
                         HimnoText(

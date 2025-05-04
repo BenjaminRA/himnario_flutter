@@ -1,14 +1,12 @@
 import 'package:Himnario/components/scroller.dart';
 import 'package:Himnario/db/db.dart';
 import 'package:Himnario/helpers/isAndroid.dart';
+import 'package:Himnario/helpers/scrollerBuilder.dart';
 import 'package:Himnario/models/tema.dart';
 import 'package:Himnario/views/buscador/buscador.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:scoped_model/scoped_model.dart';
 import 'dart:async';
-import 'package:sqflite/sqflite.dart';
 
 import 'package:Himnario/models/himnos.dart';
 
@@ -31,7 +29,7 @@ class TemaPage extends StatefulWidget {
 
 class _TemaPageState extends State<TemaPage> with RouteAware {
   List<Himno> himnos = [];
-  bool cargando = true;
+  bool cargando = false;
 
   @override
   void initState() {
@@ -45,42 +43,62 @@ class _TemaPageState extends State<TemaPage> with RouteAware {
   }
 
   Future<Null> fetchHimnos() async {
-    setState(() => cargando = true);
-    himnos = [];
+    // setState(() => cargando = true);
+    // himnos = [];
 
     // Fetching data from database
     List<Map<String, dynamic>> data;
     if (widget.id == 0) {
-      data = await DB.rawQuery('select himnos.id, himnos.titulo from himnos where id <= 517 order by himnos.id ASC');
+      data = await DB.rawQuery('''
+        SELECT 
+          himnos.id, 
+          himnos.titulo,
+          favoritos.himno_id as favorito,
+          descargados.himno_id as descargado
+        FROM himnos
+        LEFT JOIN favoritos ON himnos.id = favoritos.himno_id
+        LEFT JOIN descargados ON himnos.id = descargados.himno_id
+        WHERE id <= 517 
+        order by himnos.id ASC
+      ''');
     } else {
       if (widget.subtema) {
-        data = await DB.rawQuery(
-            'select himnos.id, himnos.titulo from himnos join sub_tema_himnos on sub_tema_himnos.himno_id = himnos.id where sub_tema_himnos.sub_tema_id = ${widget.id} order by himnos.id ASC');
+        data = await DB.rawQuery('''
+          SELECT 
+            himnos.id, 
+            himnos.titulo,
+            favoritos.himno_id as favorito,
+            descargados.himno_id as descargado
+          FROM himnos 
+          JOIN sub_tema_himnos on sub_tema_himnos.himno_id = himnos.id 
+          LEFT JOIN favoritos ON himnos.id = favoritos.himno_id
+          LEFT JOIN descargados ON himnos.id = descargados.himno_id
+          WHERE sub_tema_himnos.sub_tema_id = ${widget.id} 
+          ORDER BY himnos.id ASC''');
       } else {
-        data = await DB.rawQuery(
-            'select himnos.id, himnos.titulo from himnos join tema_himnos on himnos.id = tema_himnos.himno_id where tema_himnos.tema_id = ${widget.id} order by himnos.id ASC');
+        data = await DB.rawQuery('''
+          SELECT 
+            himnos.id, 
+            himnos.titulo,
+            favoritos.himno_id as favorito,
+            descargados.himno_id as descargado
+          FROM himnos 
+          JOIN tema_himnos on himnos.id = tema_himnos.himno_id 
+          LEFT JOIN favoritos ON himnos.id = favoritos.himno_id
+          LEFT JOIN descargados ON himnos.id = descargados.himno_id
+          WHERE tema_himnos.tema_id = ${widget.id} 
+          ORDER BY himnos.id ASC''');
       }
     }
 
-    // Fetching favoritos
-    List<Map<String, dynamic>> favoritosQuery = await DB.rawQuery('select * from favoritos');
-    Map<int, bool> favoritos = {};
-    for (dynamic favorito in favoritosQuery) {
-      favoritos[favorito['himno_id']] = true;
-    }
+    himnos = [];
 
-    // Fetching descargados
-    List<Map<String, dynamic>> descargasQuery = await DB.rawQuery('select * from descargados');
-    Map<int, bool> descargas = {};
-    for (dynamic descarga in descargasQuery) {
-      descargas[descarga['himno_id']] = true;
-    }
     for (dynamic himno in data) {
       himnos.add(Himno(
         numero: himno['id'],
         titulo: himno['titulo'],
-        descargado: descargas.containsKey(himno['id']),
-        favorito: favoritos.containsKey(himno['id']),
+        favorito: himno['favorito'] == null ? false : true,
+        descargado: himno['descargado'] == null ? false : true,
       ));
     }
     setState(() => cargando = false);
@@ -113,15 +131,15 @@ class _TemaPageState extends State<TemaPage> with RouteAware {
             ),
           ),
         ),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(4.0),
-          child: AnimatedContainer(
-            duration: Duration(milliseconds: 100),
-            curve: Curves.easeInOutSine,
-            height: cargando ? 4.0 : 0.0,
-            child: LinearProgressIndicator(),
-          ),
-        ),
+        // bottom: PreferredSize(
+        //   preferredSize: Size.fromHeight(4.0),
+        //   child: AnimatedContainer(
+        //     duration: Duration(milliseconds: 100),
+        //     curve: Curves.easeInOutSine,
+        //     height: cargando ? 4.0 : 0.0,
+        //     child: LinearProgressIndicator(),
+        //   ),
+        // ),
         actions: <Widget>[
           IconButton(
             onPressed: () async {
@@ -141,8 +159,9 @@ class _TemaPageState extends State<TemaPage> with RouteAware {
         ],
       ),
       body: Scroller(
-        himnos: himnos,
-        cargando: cargando,
+        count: himnos.length,
+        itemBuilder: scrollerBuilderHimnos(context, himnos),
+        scrollerBubbleText: (index) => himnos[index].numero <= 517 ? himnos[index].numero.toString() : himnos[index].titulo[0],
       ),
     );
   }
@@ -161,13 +180,11 @@ class _TemaPageState extends State<TemaPage> with RouteAware {
           ),
         ),
       ),
-      child: ScopedModel<TemaModel>(
-        model: tema,
-        child: Scroller(
-          himnos: himnos,
-          cargando: cargando,
-          iPhoneX: MediaQuery.of(context).size.width >= 812.0 || MediaQuery.of(context).size.height >= 812.0,
-        ),
+      child: Scroller(
+        count: himnos.length,
+        itemBuilder: scrollerBuilderHimnos(context, himnos),
+        scrollerBubbleText: (index) => himnos[index].numero <= 517 ? himnos[index].numero.toString() : himnos[index].titulo[0],
+        iPhoneX: MediaQuery.of(context).size.width >= 812.0 || MediaQuery.of(context).size.height >= 812.0,
       ),
     );
   }

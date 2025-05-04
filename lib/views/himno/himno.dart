@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:Himnario/db/db.dart';
 import 'package:Himnario/helpers/isAndroid.dart';
+import 'package:Himnario/helpers/registerVisita.dart';
 import 'package:Himnario/helpers/smallDevice.dart';
 import 'package:Himnario/models/himnos.dart';
 import 'package:Himnario/models/tema.dart';
@@ -45,7 +47,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
   late StreamSubscription completeSubscription;
   late PhotoViewScaleStateController scaleController;
 
-  late int totalDuration;
+  int totalDuration = 0;
 
   List<AudioPlayer> audioVoces = [new AudioPlayer(), new AudioPlayer(), new AudioPlayer(), new AudioPlayer(), new AudioPlayer()];
   List<String> stringVoces = ['Soprano', 'Tenor', 'ContraAlto', 'Bajo', 'Todos'];
@@ -66,14 +68,12 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
   List<Parrafo> estrofas = [];
   List<File?> archivos = [null, null, null, null, null];
   bool acordes = false;
-  double initFontSizePortrait = 16.0;
-  double initFontSizeLandscape = 16.0;
-  late Database db;
+  double? initFontSizePortrait;
+  double? initFontSizeLandscape;
+  // late Database db;
   String tema = '';
   String subTema = '';
   int temaId = 1;
-
-  SharedPreferences? prefs;
 
   // Sheet variables
   bool sheet = false;
@@ -100,17 +100,20 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
       });
 
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(statusBarBrightness: Brightness.light, statusBarIconBrightness: Brightness.light));
+
     getHimno();
+
+    registerVisita(widget.numero);
 
     super.initState();
   }
 
-  Future<Database> initDB() async {
-    String databasesPath = (await getApplicationDocumentsDirectory()).path;
-    String path = databasesPath + "/himnos.db";
-    db = await openDatabase(path);
-    return db;
-  }
+  // Future<Database> initDB() async {
+  //   String databasesPath = (await getApplicationDocumentsDirectory()).path;
+  //   String path = databasesPath + "/himnos.db";
+  //   db = await openDatabase(path);
+  //   return db;
+  // }
 
   void deleteVocesFiles() async {
     String path = (await getApplicationDocumentsDirectory()).path;
@@ -188,8 +191,8 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
     return null;
   }
 
-  Future<Null> checkPartitura(String path) async {
-    File aux = File(path + '/${widget.numero}.jpg');
+  Future<Null> checkPartitura() async {
+    File aux = File((await DB.getPath()).replaceAll('/himnos.db', '/${widget.numero}.jpg'));
     if (descargado || await aux.exists()) {
       if (await aux.exists()) {
         if (mounted) setState(() => sheetAvailable = true);
@@ -219,12 +222,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
   }
 
   Future<Null> getHimno() async {
-    prefs = await SharedPreferences.getInstance();
-    String databasesPath = (await getApplicationDocumentsDirectory()).path;
-    String path = databasesPath + "/himnos.db";
-    db = await openDatabase(path);
-
-    List<Map<String, dynamic>> parrafos = await db.rawQuery('select * from parrafos where himno_id = ${widget.numero}');
+    List<Map<String, dynamic>> parrafos = await DB.rawQuery('select * from parrafos where himno_id = ${widget.numero}');
 
     for (Map<String, dynamic> parrafo in parrafos) {
       acordes = parrafo['acordes'] != null;
@@ -233,22 +231,50 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
       }
     }
 
-    if (MediaQuery.of(context).orientation == Orientation.portrait) {
-      initFontSizePortrait = (MediaQuery.of(context).size.width - 30) / max + 8;
-      initFontSizeLandscape = (MediaQuery.of(context).size.height - 30) / max + 8;
-    } else {
-      initFontSizePortrait = (MediaQuery.of(context).size.height - 30) / max + 8;
-      initFontSizeLandscape = (MediaQuery.of(context).size.width - 30) / max + 8;
-    }
+    DB.rawQuery('select * from favoritos where himno_id = ${widget.numero}').then((response) {
+      if (response.isNotEmpty) {
+        setState(() => favorito = true);
+      } else {
+        setState(() => favorito = false);
+      }
+    }).catchError((onError) {
+      print(onError);
+    });
 
-    List<Map<String, dynamic>> favoritosQuery = await db.rawQuery('select * from favoritos where himno_id = ${widget.numero}');
-    List<Map<String, dynamic>> descargadoQuery = await db.rawQuery('select * from descargados where himno_id = ${widget.numero}');
+    DB.rawQuery('select * from descargados where himno_id = ${widget.numero}').then((response) {
+      if (response.isNotEmpty) {
+        initVocesDownloaded();
+
+        setState(() {
+          descargado = true;
+          totalDuration = response[0]['duracion'];
+        });
+      } else {
+        http.get(Uri.parse(VoicesApi.voiceAvailable(widget.numero))).then((res) {
+          if (res.statusCode == 200) {
+            initVoces();
+            setState(() => vozDisponible = true);
+          } else
+            setState(() => vozDisponible = false);
+        }).catchError((onError) => print(onError));
+
+        setState(() {
+          descargado = false;
+          totalDuration = 0;
+        });
+      }
+    }).catchError((onError) {
+      print(onError);
+    });
+
+    // List<Map<String, dynamic>> favoritosQuery = await db.rawQuery('select * from favoritos where himno_id = ${widget.numero}');
+    // List<Map<String, dynamic>> descargadoQuery = await db.rawQuery('select * from descargados where himno_id = ${widget.numero}');
     // List<Map<String,dynamic>> temaQuery = await db.rawQuery('select temas.tema, temas.id from tema_himnos join temas on temas.id = tema_himnos.tema_id where tema_himnos.himno_id = ${widget.numero}');
     // List<dynamic> subTemaQuery = await db.rawQuery('select sub_temas.id, sub_temas.sub_tema from sub_tema_himnos join sub_temas on sub_temas.id = sub_tema_himnos.sub_tema_id where sub_tema_himnos.himno_id = ${widget.numero}');
     setState(() {
-      favorito = favoritosQuery.isNotEmpty;
-      descargado = descargadoQuery.isNotEmpty;
-      totalDuration = descargadoQuery.isNotEmpty ? descargadoQuery[0]['duracion'] : 0;
+      // favorito = favoritosQuery.isNotEmpty;
+      // descargado = descargadoQuery.isNotEmpty;
+      // totalDuration = descargadoQuery.isNotEmpty ? descargadoQuery[0]['duracion'] : 0;
       estrofas = Parrafo.fromJson(parrafos);
       // tema = temaQuery == null || temaQuery.isEmpty ? '' : temaQuery[0]['tema'];
       // subTema = subTemaQuery.isNotEmpty ? subTemaQuery[0]['sub_tema'] : '';
@@ -256,20 +282,18 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
       tema = '';
       subTema = '';
       temaId = 1;
+
+      if (MediaQuery.of(context).orientation == Orientation.portrait) {
+        initFontSizePortrait = (MediaQuery.of(context).size.width - 30) / max + 8;
+        initFontSizeLandscape = (MediaQuery.of(context).size.height - 30) / max + 8;
+      } else {
+        initFontSizePortrait = (MediaQuery.of(context).size.height - 30) / max + 8;
+        initFontSizeLandscape = (MediaQuery.of(context).size.width - 30) / max + 8;
+      }
     });
 
-    if (descargadoQuery.isEmpty && mounted) {
-      http.get(Uri.parse(VoicesApi.voiceAvailable(widget.numero))).then((res) {
-        if (res.statusCode == 200) {
-          initVoces();
-          setState(() => vozDisponible = true);
-        } else
-          setState(() => vozDisponible = false);
-      }).catchError((onError) => print(onError));
-    } else
-      initVocesDownloaded();
-    checkPartitura(databasesPath);
-    await db.close();
+    checkPartitura();
+    // await db.close();
     return null;
   }
 
@@ -473,17 +497,12 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
   }
 
   void toggleFavorito() {
-    initDB().then((db) async {
-      await db.transaction((action) async {
-        if (favorito) {
-          await action.rawDelete('delete from favoritos where himno_id = ${widget.numero}');
-        } else {
-          await action.rawInsert('insert into favoritos values (${widget.numero})');
-        }
-      });
-      await db.close();
-      setState(() => favorito = !favorito);
-    });
+    if (favorito) {
+      DB.rawDelete('delete from favoritos where himno_id = ${widget.numero}');
+    } else {
+      DB.rawInsert('insert into favoritos values (${widget.numero})');
+    }
+    setState(() => favorito = !favorito);
   }
 
   void cancelSubscription() {
@@ -492,17 +511,12 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
   }
 
   void toggleDescargado() {
-    initDB().then((db) async {
-      await db.transaction((action) async {
-        if (descargado) {
-          await action.rawDelete('delete from descargados where himno_id = ${widget.numero}');
-        } else {
-          await action.rawInsert('insert into descargados values (${widget.numero}, $totalDuration)');
-        }
-      });
-      await db.close();
-      setState(() => descargado = !descargado);
-    });
+    if (descargado) {
+      DB.rawDelete('delete from descargados where himno_id = ${widget.numero}');
+    } else {
+      DB.rawInsert('insert into descargados values (${widget.numero}, $totalDuration)');
+    }
+    setState(() => descargado = !descargado);
   }
 
   Widget musicSheetLayout() {
@@ -516,7 +530,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
           if (currentOrientation == null) {
             currentOrientation = orientation;
           }
-          if (currentOrientation != orientation) {
+          if (currentOrientation != orientation && sheet) {
             currentOrientation = null;
             sheetController = PhotoViewController();
             sheet = false;
@@ -550,28 +564,42 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
             ),
           );
 
-          return currentOrientation == null
-              ? Container()
-              : !sheetReady
-                  ? loadingChild
-                  : PhotoView(
-                      controller: sheetController,
-                      imageProvider: FileImage(sheetFile),
-                      basePosition: Alignment.topCenter,
-                      // scaleStateControllerlate: scaleController,
-                      initialScale: orientation == Orientation.portrait ? PhotoViewComputedScale.contained : PhotoViewComputedScale.covered,
-                      loadingBuilder: (context, _) => loadingChild,
-                      // loadingChild: loadingChild,
-                      backgroundDecoration: BoxDecoration(
-                        color: Colors.white,
-                      ),
-                    );
+          return !sheetReady
+              ? loadingChild
+              : PhotoView(
+                  controller: sheetController,
+                  imageProvider: FileImage(sheetFile),
+                  basePosition: Alignment.topCenter,
+                  // scaleStateControllerlate: scaleController,
+                  initialScale: orientation == Orientation.portrait ? PhotoViewComputedScale.contained : PhotoViewComputedScale.covered,
+                  loadingBuilder: (context, _) => loadingChild,
+                  backgroundDecoration: BoxDecoration(
+                    color: Colors.white,
+                  ),
+                );
+          // return currentOrientation == null
+          //     ? Container()
+          //     : !sheetReady
+          //         ? loadingChild
+          //         : PhotoView(
+          //             controller: sheetController,
+          //             imageProvider: FileImage(sheetFile),
+          //             basePosition: Alignment.topCenter,
+          //             // scaleStateControllerlate: scaleController,
+          //             initialScale: orientation == Orientation.portrait ? PhotoViewComputedScale.contained : PhotoViewComputedScale.covered,
+          //             loadingBuilder: (context, _) => loadingChild,
+          //             // loadingChild: loadingChild,
+          //             backgroundDecoration: BoxDecoration(
+          //               color: Colors.white,
+          //             ),
+          //           );
         },
       ),
     );
   }
 
   Widget voicesControlsLayout() {
+    final _tema = TemaModel.of(context);
     List<Widget> controlesLayout = generateControlesLayout();
 
     List<Widget> buttonLayout = [
@@ -581,16 +609,20 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
         onDragStart: cancelSubscription,
         onSelected: (double progress) {
           positionSubscription = audioVoces[currentVoice].onPositionChanged.listen((Duration duration) {
-            setState(() {
-              currentProgress = duration.inMilliseconds / totalDuration;
-              currentDuration = duration;
-            });
+            if (mounted) {
+              setState(() {
+                currentProgress = duration.inMilliseconds / totalDuration;
+                currentDuration = duration;
+              });
+            }
           });
           completeSubscription = audioVoces[currentVoice].onPlayerComplete.listen((_) {
-            setState(() {
-              start = false;
-              currentProgress = 0.0;
-            });
+            if (mounted) {
+              setState(() {
+                start = false;
+                currentProgress = 0.0;
+              });
+            }
           });
           print(progress);
           setState(() => currentProgress = progress);
@@ -612,7 +644,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
               },
               icon: Icon(
                 Icons.fast_rewind,
-                color: isAndroid() ? null : ScopedModel.of<TemaModel>(context).getScaffoldTextColor(),
+                color: _tema.getScaffoldTextColor(),
               ),
             ),
             onPressed: () {},
@@ -624,7 +656,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
                     onPressed: pauseVoces,
                     icon: Icon(
                       Icons.pause,
-                      color: isAndroid() ? null : ScopedModel.of<TemaModel>(context).getScaffoldTextColor(),
+                      color: _tema.getScaffoldTextColor(),
                     ),
                   ),
                   onPressed: () {},
@@ -639,7 +671,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
                         : null,
                     icon: Icon(
                       Icons.play_arrow,
-                      color: isAndroid() ? null : ScopedModel.of<TemaModel>(context).getScaffoldTextColor(),
+                      color: _tema.getScaffoldTextColor(),
                     ),
                   ),
                   onPressed: () {},
@@ -656,7 +688,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
               },
               icon: Icon(
                 Icons.fast_forward,
-                color: isAndroid() ? null : ScopedModel.of<TemaModel>(context).getScaffoldTextColor(),
+                color: _tema.getScaffoldTextColor(),
               ),
             ),
             onPressed: () {},
@@ -673,7 +705,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
         translation: Offset(0.0, 1.0 - switchModeController.value),
         child: Card(
           margin: EdgeInsets.all(0.0),
-          color: !isAndroid() ? ScopedModel.of<TemaModel>(context).getScaffoldBackgroundColor() : null,
+          color: _tema.getScaffoldBackgroundColor(),
           elevation: 10.0,
           child: !cargando
               ? Padding(
@@ -694,7 +726,7 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
                               value: 0.25 * doneCount,
                               backgroundColor: Colors.grey[400],
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Theme.of(context).primaryIconTheme.color == Colors.black ? Colors.black : Theme.of(context).primaryColor,
+                                _tema.getScaffoldTextColor(),
                               ),
                             )
                           : CupertinoActivityIndicator(
@@ -749,119 +781,118 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
   }
 
   Widget materialLayout() {
-    if (prefs != null) {
-      return Scaffold(
-          appBar: AppBar(
-            actions: <Widget>[
-              vozDisponible || sheetAvailable
-                  ? IconButton(
-                      onPressed: toggleDescargado,
-                      icon: descargado
-                          ? Icon(
-                              Icons.delete,
-                            )
-                          : Icon(
-                              Icons.get_app,
-                            ),
-                    )
-                  : Container(),
+    final _tema = TemaModel.of(context);
 
-              // Activar modo partituras
-              sheetAvailable
-                  ? IconButton(
-                      onPressed: () {
-                        // Future.delayed(Duration(milliseconds: 500)).then((_) => sheetController.reset());
-                        setState(() => sheet = !sheet);
-                      },
-                      icon: Icon(Icons.music_note),
-                    )
-                  : Container(),
+    return Scaffold(
+      appBar: AppBar(
+        actions: <Widget>[
+          vozDisponible || sheetAvailable
+              ? IconButton(
+                  onPressed: toggleDescargado,
+                  icon: descargado
+                      ? Icon(
+                          Icons.delete,
+                        )
+                      : Icon(
+                          Icons.get_app,
+                        ),
+                )
+              : Container(),
 
-              IconButton(
-                onPressed: toggleFavorito,
-                icon: favorito
-                    ? Icon(
-                        Icons.star,
-                      )
-                    : Icon(
-                        Icons.star_border,
-                      ),
-              ),
-            ],
-            title: Tooltip(
-              message: '${widget.numero} - ${widget.titulo}',
-              child: Container(
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${widget.titulo}',
-                      textScaleFactor: 0.9,
+          // Activar modo partituras
+          sheetAvailable
+              ? IconButton(
+                  onPressed: () {
+                    // Future.delayed(Duration(milliseconds: 500)).then((_) => sheetController.reset());
+                    setState(() => sheet = !sheet);
+                  },
+                  icon: Icon(Icons.music_note),
+                )
+              : Container(),
+
+          IconButton(
+            onPressed: toggleFavorito,
+            icon: favorito
+                ? Icon(
+                    Icons.star,
+                  )
+                : Icon(
+                    Icons.star_border,
+                  ),
+          ),
+        ],
+        title: Tooltip(
+          message: '${widget.numero} - ${widget.titulo}',
+          child: Container(
+            width: double.infinity,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${widget.titulo}',
+                  textScaleFactor: 0.9,
+                ),
+                Text(
+                  '${widget.numero}',
+                  textScaleFactor: 0.8,
+                  style: TextStyle(fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+        ),
+        bottom: PreferredSize(preferredSize: Size.fromHeight(4.0), child: Container()),
+      ),
+      body: Stack(
+        children: <Widget>[
+          initFontSizePortrait != null && initFontSizeLandscape != null
+              ? BodyHimno(
+                  alignment: _tema.alignment,
+                  estrofas: estrofas,
+                  initFontSizePortrait: initFontSizePortrait!,
+                  initFontSizeLandscape: initFontSizeLandscape!,
+                  switchValue: switchModeController.value,
+                  tema: tema,
+                  subTema: subTema,
+                  temaId: temaId,
+                )
+              : Container(),
+          WillPopScope(
+            onWillPop: () async {
+              bool goBack = true;
+              if (sheet) {
+                setState(() => sheet = !sheet);
+                goBack = false;
+              }
+              return goBack;
+            },
+            child: musicSheetLayout(),
+          ),
+          voicesControlsLayout(),
+        ],
+      ),
+      floatingActionButton: vozDisponible
+          ? Padding(
+              padding: EdgeInsets.only(bottom: smallDevice(context) ? switchModeController.value * 175 : switchModeController.value * 130),
+              child: FloatingActionButton(
+                key: UniqueKey(),
+                backgroundColor: modoVoces ? Colors.redAccent : TemaModel.of(context).getAccentColor(),
+                onPressed: switchModes,
+                child: Stack(
+                  children: <Widget>[
+                    Transform.scale(
+                      scale: 1.0 - switchModeController.value,
+                      child: Icon(Icons.play_arrow, size: 40.0),
                     ),
-                    Text(
-                      '${widget.numero}',
-                      textScaleFactor: 0.8,
-                      style: TextStyle(fontStyle: FontStyle.italic),
+                    Transform.scale(
+                      scale: 0.0 + switchModeController.value,
+                      child: Icon(Icons.redo, color: Colors.white, size: 40.0),
                     ),
                   ],
                 ),
               ),
-            ),
-            bottom: PreferredSize(preferredSize: Size.fromHeight(4.0), child: Container()),
-          ),
-          body: Stack(
-            children: <Widget>[
-              BodyHimno(
-                alignment: prefs!.getString('alignment') ?? 'Izquierda',
-                estrofas: estrofas,
-                initFontSizePortrait: initFontSizePortrait,
-                initFontSizeLandscape: initFontSizeLandscape,
-                switchValue: switchModeController.value,
-                tema: tema,
-                subTema: subTema,
-                temaId: temaId,
-              ),
-              WillPopScope(
-                onWillPop: () async {
-                  bool goBack = true;
-                  if (sheet) {
-                    setState(() => sheet = !sheet);
-                    goBack = false;
-                  }
-                  return goBack;
-                },
-                child: musicSheetLayout(),
-              ),
-              voicesControlsLayout(),
-            ],
-          ),
-          floatingActionButton: vozDisponible
-              ? Padding(
-                  padding: EdgeInsets.only(bottom: smallDevice(context) ? switchModeController.value * 175 : switchModeController.value * 130),
-                  child: FloatingActionButton(
-                    key: UniqueKey(),
-                    backgroundColor: modoVoces ? Colors.redAccent : TemaModel.of(context).getAccentColor(),
-                    onPressed: switchModes,
-                    child: Stack(
-                      children: <Widget>[
-                        Transform.scale(
-                          scale: 1.0 - switchModeController.value,
-                          child: Icon(Icons.play_arrow, size: 40.0),
-                        ),
-                        Transform.scale(
-                          scale: 0.0 + switchModeController.value,
-                          child: Icon(Icons.redo, color: Colors.white, size: 40.0),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : null);
-    }
-
-    return Scaffold(
-      appBar: AppBar(),
+            )
+          : null,
     );
   }
 
@@ -907,77 +938,75 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
         // actionsForegroundColor: ScopedModel.of<TemaModel>(context).getTabTextColor(),
         // backgroundColor: ScopedModel.of<TemaModel>(context).getTabBackgroundColor(),
         middle: Text('${widget.numero} - ${widget.titulo}'),
-        trailing: prefs != null
-            ? Transform.translate(
-                offset: Offset(20.0, 0.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    CupertinoButton(
-                      onPressed: toggleFavorito,
-                      padding: EdgeInsets.only(bottom: 2.0),
-                      child: favorito
-                          ? Icon(
-                              Icons.star,
-                              size: 30.0,
-                              color: _tema.getAccentColorText(),
-                            )
-                          : Icon(
-                              Icons.star_border,
-                              size: 30.0,
-                              color: _tema.getAccentColorText(),
-                            ),
-                    ),
-                    CupertinoButton(
-                      disabledColor: Colors.black.withOpacity(0.5),
-                      onPressed: vozDisponible || sheetAvailable
-                          ? () {
-                              showCupertinoModalPopup(
-                                context: context,
-                                builder: (BuildContext context) => CupertinoActionSheet(
-                                  cancelButton: CupertinoActionSheetAction(
-                                    isDestructiveAction: true,
-                                    onPressed: () => Navigator.of(context).pop(),
-                                    child: Text('Cancelar'),
-                                  ),
-                                  actions: modalButtons,
-                                ),
-                              );
-                            }
-                          : null,
-                      padding: EdgeInsets.only(bottom: 2.0),
-                      child: Icon(
-                        Icons.more_vert,
+        trailing: Transform.translate(
+          offset: Offset(20.0, 0.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              CupertinoButton(
+                onPressed: toggleFavorito,
+                padding: EdgeInsets.only(bottom: 2.0),
+                child: favorito
+                    ? Icon(
+                        Icons.star,
+                        size: 30.0,
+                        color: _tema.getAccentColorText(),
+                      )
+                    : Icon(
+                        Icons.star_border,
                         size: 30.0,
                         color: _tema.getAccentColorText(),
                       ),
-                    ),
-                  ],
+              ),
+              CupertinoButton(
+                disabledColor: Colors.black.withOpacity(0.5),
+                onPressed: vozDisponible || sheetAvailable
+                    ? () {
+                        showCupertinoModalPopup(
+                          context: context,
+                          builder: (BuildContext context) => CupertinoActionSheet(
+                            cancelButton: CupertinoActionSheetAction(
+                              isDestructiveAction: true,
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text('Cancelar'),
+                            ),
+                            actions: modalButtons,
+                          ),
+                        );
+                      }
+                    : null,
+                padding: EdgeInsets.only(bottom: 2.0),
+                child: Icon(
+                  Icons.more_vert,
+                  size: 30.0,
+                  color: _tema.getAccentColorText(),
                 ),
-              )
-            : null,
+              ),
+            ],
+          ),
+        ),
       ),
-      child: prefs != null
-          ? Stack(
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(bottom: switchModeController.value * (smallDevice(context) ? 185.0 : 140.0)),
-                  child: BodyHimno(
+      child: Stack(
+        children: <Widget>[
+          Padding(
+            padding: EdgeInsets.only(bottom: switchModeController.value * (smallDevice(context) ? 185.0 : 140.0)),
+            child: initFontSizePortrait != null && initFontSizeLandscape != null
+                ? BodyHimno(
                     switchValue: switchModeController.value,
-                    alignment: prefs!.getString('alignment') ?? 'Izquierda',
+                    alignment: _tema.alignment,
                     estrofas: estrofas,
-                    initFontSizePortrait: initFontSizePortrait,
-                    initFontSizeLandscape: initFontSizeLandscape,
+                    initFontSizePortrait: initFontSizePortrait!,
+                    initFontSizeLandscape: initFontSizeLandscape!,
                     tema: tema,
                     subTema: subTema,
                     temaId: temaId,
-                  ),
-                ),
-                musicSheetLayout(),
-                voicesControlsLayout(),
-              ],
-            )
-          : Container(),
+                  )
+                : Container(),
+          ),
+          musicSheetLayout(),
+          voicesControlsLayout(),
+        ],
+      ),
     );
   }
 

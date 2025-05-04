@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 class CoroText extends StatelessWidget {
-  final String alignment;
+  final TemaAlignment alignment;
   final List<Parrafo> estrofas;
   final double fontSize;
   final bool acordes;
   final double animation;
-  final String notation;
+  final TemaNotation notation;
   Map<String, double> fontFamilies = {
     "Josefin Sans": -1.0,
     "Lato": 1.0,
@@ -27,7 +27,7 @@ class CoroText extends StatelessWidget {
   };
 
   CoroText({
-    this.alignment = 'Izquierda',
+    this.alignment = TemaAlignment.Izquierda,
     required this.estrofas,
     required this.fontSize,
     required this.acordes,
@@ -41,13 +41,13 @@ class CoroText extends StatelessWidget {
 
     TextAlign align;
     switch (alignment) {
-      case 'Izquierda':
+      case TemaAlignment.Izquierda:
         align = TextAlign.left;
         break;
-      case 'Centro':
+      case TemaAlignment.Centro:
         align = TextAlign.center;
         break;
-      case 'Derecha':
+      case TemaAlignment.Derecha:
         align = TextAlign.right;
         break;
       default:
@@ -57,7 +57,7 @@ class CoroText extends StatelessWidget {
     List<TextSpan> parrafos = [];
     for (Parrafo parrafo in estrofas) {
       List<String> lineasAcordes = parrafo.acordes != null && parrafo.acordes!.isNotEmpty
-          ? notation == 'americana'
+          ? notation == TemaNotation.Americana
               ? Acordes.toAmericano(parrafo.acordes!)!.split('\n')
               : parrafo.acordes!.split('\n')
           : [];

@@ -20,10 +20,13 @@ void main() async {
   // String fontFamily = prefs.getString('fuente') ?? 'Merriweather';
   if (['Raleway', '.SF Pro Text'].contains(font)) font = 'Merriweather';
 
+  String alignment = prefs.getString('alignment') ?? 'Izquierda';
+
   TemaModel tema = TemaModel()
-    ..setMainColor(mainColor != null ? Color(mainColor) : Colors.deepPurple)
+    ..setMainColor(mainColor != null ? Color(mainColor) : Colors.black)
     ..setFont(font)
-    ..setBrightness(dark ? Brightness.dark : Brightness.light);
+    ..setBrightness(dark ? Brightness.dark : Brightness.light)
+    ..setAlignment(TemaAlignment.values.firstWhere((e) => e.name == alignment));
 
   runApp(ScopedModel<TemaModel>(
     model: tema,
@@ -53,6 +56,7 @@ class MyApp extends StatelessWidget {
               appBarTheme: AppBarTheme(
                 color: tema.getAccentColor(),
                 foregroundColor: tema.getAccentColorText(),
+                scrolledUnderElevation: 0.0,
               ),
               primaryColor: tema.getAccentColor(),
               fontFamily: tema.font,
@@ -60,7 +64,14 @@ class MyApp extends StatelessWidget {
               // drawerTheme: DrawerThemeData(
               //     backgroundColor: tema.getScaffoldBackgroundColor(),
               // ),
+              // listTileTheme: ListTileThemeData(tileColor: getColorShade(tema.getAccentColor(), 0.05)),
               // scaffoldBackgroundColor: getColorShade(tema.getAccentColor(), 0.02),
+              textSelectionTheme: TextSelectionThemeData(
+                // selectionColor: tema.getAccentColor(),
+                selectionHandleColor: tema.getScaffoldAccentColor(),
+                // cursorColor: tema.getAccentColor(),
+              ),
+              scaffoldBackgroundColor: tema.getScaffoldBackgroundColor(),
               bottomNavigationBarTheme: BottomNavigationBarThemeData(
                 backgroundColor: tema.getAccentColor(),
                 selectedItemColor: tema.getAccentColorText(),
@@ -69,11 +80,28 @@ class MyApp extends StatelessWidget {
                 unselectedIconTheme: IconThemeData(size: 20.0, opacity: 0.7),
               ),
               floatingActionButtonTheme: FloatingActionButtonThemeData(
-                foregroundColor: (tema.brightness == Brightness.dark && tema.getAccentColorText() == Colors.white ||
-                        tema.brightness == Brightness.light && tema.getAccentColorText() == Colors.black)
-                    ? tema.getAccentColorText()
-                    : getColorShade(tema.getAccentColor(), 0.2),
-                backgroundColor: tema.getAccentColor() == Colors.white ? Colors.black : tema.getAccentColor(),
+                foregroundColor: tema.getAccentColorText(),
+                backgroundColor: tema.getAccentColor(),
+              ),
+              // listTileTheme: ListTileThemeData(
+              //   iconColor: tema.getScaffoldTextColor(),
+              //   textColor: tema.getScaffoldTextColor(),
+              //   // selectedColor: tema.getScaffoldTextColor(),
+              //   tileColor: tema.getListTileColor(),
+              //   selectedTileColor: tema.getScaffoldAccentColor(),
+              // ),
+              drawerTheme: DrawerThemeData(
+                backgroundColor: tema.getScaffoldBackgroundColor(),
+              ),
+              snackBarTheme: SnackBarThemeData(
+                backgroundColor: tema.getAccentColor(),
+                actionBackgroundColor: tema.getAccentColor(),
+                actionTextColor: tema.getAccentColorText(),
+                closeIconColor: tema.getAccentColorText(),
+                contentTextStyle: TextStyle(
+                  fontFamily: tema.font,
+                  color: tema.getAccentColorText(),
+                ),
               ),
               brightness: tema.brightness,
               primarySwatch: MaterialColor(
@@ -127,12 +155,13 @@ class MyApp extends StatelessWidget {
               primaryColor: tema.getAccentColor(),
               brightness: tema.brightness,
               barBackgroundColor: tema.getAccentColor(),
+              scaffoldBackgroundColor: tema.getScaffoldBackgroundColor(),
               textTheme: CupertinoTextThemeData(
                 actionTextStyle: TextStyle(fontFamily: tema.font),
                 navLargeTitleTextStyle: TextStyle(fontFamily: tema.font),
                 navActionTextStyle: TextStyle(fontFamily: tema.font, color: tema.getAccentColorText()),
                 dateTimePickerTextStyle: TextStyle(fontFamily: tema.font),
-                pickerTextStyle: TextStyle(fontFamily: tema.font),
+                pickerTextStyle: TextStyle(fontFamily: tema.font, color: tema.getScaffoldTextColor()),
                 navTitleTextStyle: TextStyle(
                   fontFamily: tema.font,
                   color: tema.getAccentColorText(),

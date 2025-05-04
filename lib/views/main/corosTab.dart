@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:Himnario/components/scroller.dart';
 import 'package:Himnario/helpers/isAndroid.dart';
 import 'package:Himnario/components/corosScroller.dart';
+import 'package:Himnario/helpers/scrollerBuilder.dart';
 import 'package:Himnario/models/categorias.dart';
 import 'package:Himnario/models/himnos.dart';
 import 'package:Himnario/models/layout.dart';
@@ -42,17 +44,20 @@ class _CorosTabState extends State<CorosTab> {
 
   Widget materialTab() {
     return RefreshIndicator(
-      color: TemaModel.of(context).getAccentColor(),
+      color: TemaModel.of(context).getScaffoldAccentColor(),
       onRefresh: widget.onRefresh,
-      child: CorosScroller(
-        himnos: widget.coros,
+      child: Scroller(
+        count: widget.coros.length,
+        itemBuilder: scrollerBuilderHimnos(context, widget.coros),
+        scrollerBubbleText: (index) => widget.coros[index].numero <= 517 ? widget.coros[index].numero.toString() : widget.coros[index].titulo[0],
+        // himnos: widget.coros,
         mensaje: '',
       ),
     );
   }
 
   Widget cupertinoTab() {
-    final tema = ScopedModel.of<TemaModel>(context);
+    final tema = TemaModel.of(context);
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
@@ -95,8 +100,11 @@ class _CorosTabState extends State<CorosTab> {
       ),
       child: Stack(
         children: <Widget>[
-          CorosScroller(
-            himnos: widget.coros,
+          Scroller(
+            // himnos: widget.coros,
+            count: widget.coros.length,
+            itemBuilder: scrollerBuilderHimnos(context, widget.coros),
+            scrollerBubbleText: (index) => widget.coros[index].numero <= 517 ? widget.coros[index].numero.toString() : widget.coros[index].titulo[0],
             mensaje: '',
             iPhoneX: MediaQuery.of(context).size.width >= 812.0 || MediaQuery.of(context).size.height >= 812.0,
             onRefresh: widget.onRefresh,

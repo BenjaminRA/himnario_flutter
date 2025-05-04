@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 class HimnoText extends StatelessWidget {
-  final String alignment;
+  final TemaAlignment alignment;
   final List<Parrafo> estrofas;
   final double fontSize;
 
   HimnoText({
     required this.estrofas,
     required this.fontSize,
-    this.alignment = 'Izquierda',
+    this.alignment = TemaAlignment.Izquierda,
   });
 
   @override
@@ -21,13 +21,13 @@ class HimnoText extends StatelessWidget {
 
     TextAlign align;
     switch (alignment) {
-      case 'Izquierda':
+      case TemaAlignment.Izquierda:
         align = TextAlign.left;
         break;
-      case 'Centro':
+      case TemaAlignment.Centro:
         align = TextAlign.center;
         break;
-      case 'Derecha':
+      case TemaAlignment.Derecha:
         align = TextAlign.right;
         break;
       default:
@@ -79,7 +79,10 @@ class HimnoText extends StatelessWidget {
                 textDirection: TextDirection.ltr,
                 textAlign: align,
                 text: TextSpan(
-                  style: DefaultTextStyle.of(context).style,
+                  style: TextStyle(
+                    color: tema.getScaffoldTextColor(),
+                    fontFamily: tema.font,
+                  ),
                   children: parrafos,
                 ),
               ),

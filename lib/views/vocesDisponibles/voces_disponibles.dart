@@ -1,6 +1,7 @@
 import 'package:Himnario/components/scroller.dart';
 import 'package:Himnario/db/db.dart';
 import 'package:Himnario/helpers/isAndroid.dart';
+import 'package:Himnario/helpers/scrollerBuilder.dart';
 import 'package:Himnario/models/tema.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
@@ -33,27 +34,26 @@ class _DisponiblesPageState extends State<DisponiblesPage> {
 
     http.Response res = await http.get(Uri.parse(VoicesApi.voicesAvailable()));
 
-    List<Map<String, dynamic>> data = await DB.rawQuery(
-        "select himnos.id, himnos.titulo from himnos where himnos.id in ${(res.body.replaceFirst('[', '(')).replaceFirst(']', ')')} group by himnos.id order by himnos.id ASC");
-
-    List<Map<String, dynamic>> favoritosQuery = await DB.rawQuery('select * from favoritos');
-    Map<int, bool> favoritos = {};
-    for (dynamic favorito in favoritosQuery) {
-      favoritos[favorito['himno_id']] = true;
-    }
-
-    List<Map<String, dynamic>> descargasQuery = await DB.rawQuery('select * from descargados');
-    Map<int, bool> descargas = {};
-    for (dynamic descarga in descargasQuery) {
-      descargas[descarga['himno_id']] = true;
-    }
+    List<Map<String, dynamic>> data = await DB.rawQuery('''
+      SELECT 
+        himnos.id, 
+        himnos.titulo,
+        favoritos.himno_id as favorito,
+        descargados.himno_id as descargado
+      FROM himnos 
+      LEFT JOIN favoritos ON himnos.id = favoritos.himno_id
+      LEFT JOIN descargados ON himnos.id = descargados.himno_id
+      WHERE himnos.id IN ${(res.body.replaceFirst('[', '(')).replaceFirst(']', ')')} 
+      GROUP BY himnos.id 
+      ORDER BY himnos.id ASC
+    ''');
 
     for (dynamic himno in data) {
       himnos.add(Himno(
         numero: himno['id'],
         titulo: himno['titulo'],
-        descargado: descargas.containsKey(himno['id']),
-        favorito: favoritos.containsKey(himno['id']),
+        favorito: himno['favorito'] != null,
+        descargado: himno['descargado'] != null,
       ));
     }
 
@@ -75,8 +75,9 @@ class _DisponiblesPageState extends State<DisponiblesPage> {
         ),
       ),
       body: Scroller(
-        himnos: himnos,
-        cargando: cargando,
+        count: himnos.length,
+        itemBuilder: scrollerBuilderHimnos(context, himnos),
+        scrollerBubbleText: (index) => himnos[index].numero <= 517 ? himnos[index].numero.toString() : himnos[index].titulo[0],
       ),
     );
   }
@@ -100,8 +101,9 @@ class _DisponiblesPageState extends State<DisponiblesPage> {
               child: CupertinoActivityIndicator(),
             )
           : Scroller(
-              himnos: himnos,
-              cargando: cargando,
+              count: himnos.length,
+              itemBuilder: scrollerBuilderHimnos(context, himnos),
+              scrollerBubbleText: (index) => himnos[index].numero <= 517 ? himnos[index].numero.toString() : himnos[index].titulo[0],
               iPhoneX: MediaQuery.of(context).size.width >= 812.0 || MediaQuery.of(context).size.height >= 812.0,
             ),
     );

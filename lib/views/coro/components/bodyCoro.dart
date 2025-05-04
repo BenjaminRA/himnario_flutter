@@ -1,16 +1,17 @@
 import 'package:Himnario/models/himnos.dart';
+import 'package:Himnario/models/tema.dart';
 import 'package:flutter/material.dart';
 
 import 'estructuraCoro.dart';
 
 class BodyCoro extends StatefulWidget {
-  final String alignment;
+  final TemaAlignment alignment;
   final double initFontSizePortrait;
   final double initFontSizeLandscape;
   final List<Parrafo> estrofas;
   final bool acordes;
   final double animation;
-  final String notation;
+  final TemaNotation notation;
   final ScrollController scrollController;
   final Function stopScroll;
 

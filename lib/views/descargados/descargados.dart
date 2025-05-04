@@ -1,8 +1,11 @@
 import 'package:Himnario/components/scroller.dart';
 import 'package:Himnario/db/db.dart';
 import 'package:Himnario/helpers/isAndroid.dart';
+import 'package:Himnario/helpers/scrollerBuilder.dart';
 import 'package:Himnario/main.dart';
 import 'package:Himnario/models/tema.dart';
+import 'package:Himnario/views/coro/coro.dart';
+import 'package:Himnario/views/himno/himno.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -35,22 +38,28 @@ class _DescargadosPageState extends State<DescargadosPage> with RouteAware {
     setState(() => cargando = true);
     himnos = [];
 
-    List<Map<String, dynamic>> data =
-        await DB.rawQuery('select * from himnos join descargados on descargados.himno_id = himnos.id order by himnos.id ASC');
-    List<Map<String, dynamic>> favoritosQuery = await DB.rawQuery('select * from favoritos');
+    List<Map<String, dynamic>> data = await DB.rawQuery('''
+          SELECT 
+            himnos.id, 
+            himnos.titulo,
+            himnos.transpose,
+            himnos.scroll_speed,
+            favoritos.himno_id as favorito,
+          FROM himnos 
+          JOIN descargados ON descargados.himno_id = himnos.id 
+          LEFT JOIN favoritos ON himnos.id = favoritos.himno_id
+          ORDER BY himnos.id ASC
+        ''');
 
-    Map<int, bool> favoritos = {};
-    for (dynamic favorito in favoritosQuery) {
-      favoritos[favorito['himno_id']] = true;
-    }
     for (dynamic himno in data) {
       himnos.add(
         Himno(
           numero: himno['id'],
           titulo: himno['titulo'],
-          transpose: himno['transpose'],
+          transpose: himno['transpose'] ?? 0,
+          autoScrollSpeed: himno['scroll_speed'] ?? 0,
           descargado: true,
-          favorito: favoritos.containsKey(himno['id']),
+          favorito: himno['favorito'] != null,
         ),
       );
     }
@@ -72,6 +81,8 @@ class _DescargadosPageState extends State<DescargadosPage> with RouteAware {
   }
 
   Widget materialLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Himnos Descargados'),
@@ -86,8 +97,9 @@ class _DescargadosPageState extends State<DescargadosPage> with RouteAware {
         ),
       ),
       body: Scroller(
-        himnos: himnos,
-        cargando: cargando,
+        count: himnos.length,
+        itemBuilder: scrollerBuilderHimnos(context, himnos),
+        scrollerBubbleText: (index) => himnos[index].numero <= 517 ? himnos[index].numero.toString() : himnos[index].titulo[0],
         mensaje: 'No has descargado ningún himno\n para escuchar la melodia sin conexión',
       ),
     );
@@ -109,8 +121,9 @@ class _DescargadosPageState extends State<DescargadosPage> with RouteAware {
         ),
       ),
       child: Scroller(
-        himnos: himnos,
-        cargando: cargando,
+        count: himnos.length,
+        itemBuilder: scrollerBuilderHimnos(context, himnos),
+        scrollerBubbleText: (index) => himnos[index].numero <= 517 ? himnos[index].numero.toString() : himnos[index].titulo[0],
         iPhoneX: MediaQuery.of(context).size.width >= 812.0 || MediaQuery.of(context).size.height >= 812.0,
         mensaje: 'No has descargado ningún himno\n para escuchar la melodia sin conexión',
       ),

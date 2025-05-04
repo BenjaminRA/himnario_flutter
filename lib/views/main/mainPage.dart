@@ -10,6 +10,7 @@ import 'package:Himnario/main.dart';
 import 'package:Himnario/models/categorias.dart';
 import 'package:Himnario/models/himnos.dart';
 import 'package:Himnario/models/layout.dart';
+import 'package:Himnario/views/recientes/recientes.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -96,6 +97,8 @@ class _MainPageState extends State<MainPage> with RouteAware {
   }
 
   Future<Null> checkUpdates(SharedPreferences prefs) async {
+    final tema = TemaModel.of(context);
+
     try {
       // Checking if we have internet connection
       final result = await InternetAddress.lookup('google.com');
@@ -117,22 +120,16 @@ class _MainPageState extends State<MainPage> with RouteAware {
                   children: <Widget>[
                     Icon(
                       Icons.get_app,
-                      color: Theme.of(context).brightness == Brightness.light ? Colors.white : Colors.black,
+                      color: tema.getAccentColorText(),
                     ),
                     SizedBox(
                       width: 15.0,
                     ),
-                    Text(
-                      'Actualizando Base de Datos',
-                      style: TextStyle(
-                        color: TemaModel.of(context).getAccentColorText(),
-                      ),
-                    )
+                    Text('Actualizando Base de Datos')
                   ],
                 ),
                 action: SnackBarAction(
                   label: 'Ok',
-                  textColor: Theme.of(context).brightness == Brightness.light ? Colors.white : Colors.black,
                   onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                 ),
               ),
@@ -186,9 +183,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
                     ),
                     Text(
                       'Base de Datos Actualizada',
-                      style: TextStyle(
-                        color: TemaModel.of(context).getAccentColorText(),
-                      ),
+                      style: TextStyle(color: Colors.white),
                     )
                   ],
                 ),
@@ -196,6 +191,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
                 action: SnackBarAction(
                   label: 'Ok',
                   textColor: Colors.white,
+                  backgroundColor: Colors.green,
                   onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
                 ),
               ),
@@ -272,6 +268,14 @@ class _MainPageState extends State<MainPage> with RouteAware {
         onTap: () async {
           Navigator.pop(context);
           Navigator.push(context, getPageRoute(FavoritosPage(), tema: tema));
+        },
+      ),
+      MainMenuTile(
+        icon: Icon(Icons.history),
+        title: "Recientes",
+        onTap: () async {
+          Navigator.pop(context);
+          Navigator.push(context, getPageRoute(RecientesPage(), tema: tema));
         },
       ),
       MainMenuTile(
@@ -484,7 +488,14 @@ class _MainPageState extends State<MainPage> with RouteAware {
           ),
           actions: mainMenuTiles(context)
               .map((e) => CupertinoActionSheetAction(
-                    child: Text(e.title, style: TextStyle(color: tema.getScaffoldTextColor())),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(e.icon.icon, color: tema.getScaffoldTextColor()),
+                        SizedBox(width: 10.0),
+                        Text(e.title, style: TextStyle(color: tema.getScaffoldTextColor())),
+                      ],
+                    ),
                     onPressed: e.onTap as VoidCallback,
                   ))
               .toList(),
@@ -512,6 +523,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
           },
           tabBar: CupertinoTabBar(
             activeColor: tema.getAccentColorText(),
+            inactiveColor: tema.getAccentColorText().withOpacity(0.6),
             iconSize: 25.0,
             items: <BottomNavigationBarItem>[
               BottomNavigationBarItem(

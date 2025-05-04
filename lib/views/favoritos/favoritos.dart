@@ -1,6 +1,7 @@
 import 'package:Himnario/components/scroller.dart';
 import 'package:Himnario/db/db.dart';
 import 'package:Himnario/helpers/isAndroid.dart';
+import 'package:Himnario/helpers/scrollerBuilder.dart';
 import 'package:Himnario/main.dart';
 import 'package:Himnario/models/tema.dart';
 import 'package:flutter/cupertino.dart';
@@ -35,22 +36,27 @@ class _FavoritosPageState extends State<FavoritosPage> with RouteAware {
     setState(() => cargando = true);
     himnos = [];
 
-    List<Map<String, dynamic>> data =
-        await DB.rawQuery('select * from himnos join favoritos on favoritos.himno_id = himnos.id order by himnos.id ASC');
-    List<Map<String, dynamic>> descargadosQuery = await DB.rawQuery('select * from descargados');
+    List<Map<String, dynamic>> data = await DB.rawQuery('''
+          SELECT 
+            himnos.id, 
+            himnos.titulo,
+            himnos.transpose,
+            himnos.scroll_speed,
+            descargados.himno_id as descargado
+          FROM himnos 
+          JOIN favoritos ON favoritos.himno_id = himnos.id 
+          LEFT JOIN descargados ON himnos.id = descargados.himno_id
+          ORDER BY himnos.id ASC
+        ''');
 
-    Map<int, bool> descargados = {};
-    for (dynamic descargado in descargadosQuery) {
-      descargados[descargado['himno_id']] = true;
-    }
-    ;
     for (dynamic himno in data) {
       himnos.add(
         Himno(
           numero: himno['id'],
           titulo: himno['titulo'],
-          transpose: himno['transpose'],
-          descargado: descargados.containsKey(himno['id']),
+          transpose: himno['transpose'] ?? 0,
+          descargado: himno['descargado'] != null,
+          autoScrollSpeed: himno['scroll_speed'] ?? 0,
           favorito: true,
         ),
       );
@@ -87,8 +93,9 @@ class _FavoritosPageState extends State<FavoritosPage> with RouteAware {
         ),
       ),
       body: Scroller(
-        himnos: himnos,
-        cargando: cargando,
+        count: himnos.length,
+        itemBuilder: scrollerBuilderHimnos(context, himnos),
+        scrollerBubbleText: (index) => himnos[index].numero <= 517 ? himnos[index].numero.toString() : himnos[index].titulo[0],
         mensaje: 'No has agregando ningún himno\n a tu lista de favoritos',
       ),
     );
@@ -109,8 +116,9 @@ class _FavoritosPageState extends State<FavoritosPage> with RouteAware {
           ),
         ),
         child: Scroller(
-          himnos: himnos,
-          cargando: cargando,
+          count: himnos.length,
+          itemBuilder: scrollerBuilderHimnos(context, himnos),
+          scrollerBubbleText: (index) => himnos[index].numero <= 517 ? himnos[index].numero.toString() : himnos[index].titulo[0],
           iPhoneX: MediaQuery.of(context).size.width >= 812.0 || MediaQuery.of(context).size.height >= 812.0,
           mensaje: 'No has agregando ningún himno\n a tu lista de favoritos',
         ));

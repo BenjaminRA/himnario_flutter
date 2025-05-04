@@ -17,7 +17,6 @@ class _TemasPageState extends State<TemasPage> {
   // List<String> temasNombre;
   // List<ThemeData> temasTema;
   int? value;
-  SharedPreferences? prefs;
   late Color originalColor;
   late Color pickerColor;
 
@@ -35,11 +34,6 @@ class _TemasPageState extends State<TemasPage> {
     // Color
     pickerColor = TemaModel.of(context, rebuildOnChange: false).mainColor;
     originalColor = pickerColor;
-
-    SharedPreferences.getInstance().then((value) {
-      prefs = value;
-      setState(() {});
-    });
   }
 
   Widget materialLayout(BuildContext context) {
@@ -88,8 +82,8 @@ class _TemasPageState extends State<TemasPage> {
               tema.setMainColor(pickerColor);
               tema.setBrightness(brightness);
 
-              prefs!.setInt('mainColor', pickerColor.value);
-              prefs!.setString('brightness', brightness.toString());
+              // prefs!.setInt('mainColor', pickerColor.value);
+              // prefs!.setString('brightness', brightness.toString());
               print((pickerColor.red * 0.299 + pickerColor.green * 0.587 + pickerColor.blue * 0.114));
 
               setState(() {});
@@ -148,8 +142,8 @@ class _TemasPageState extends State<TemasPage> {
                     tema.setMainColor(pickerColor);
                     tema.setBrightness(brightness);
 
-                    prefs!.setInt('mainColor', pickerColor.value);
-                    prefs!.setString('brightness', brightness.toString());
+                    // prefs!.setInt('mainColor', pickerColor.value);
+                    // prefs!.setString('brightness', brightness.toString());
                     print((pickerColor.red * 0.299 + pickerColor.green * 0.587 + pickerColor.blue * 0.114));
 
                     setState(() {});
@@ -246,8 +240,8 @@ class _TemasPageState extends State<TemasPage> {
                     tema.setMainColor(pickerColor);
                     tema.setBrightness(brightness);
 
-                    prefs!.setInt('mainColor', pickerColor.value);
-                    prefs!.setString('brightness', brightness.toString());
+                    // prefs!.setInt('mainColor', pickerColor.value);
+                    // prefs!.setString('brightness', brightness.toString());
                     print((pickerColor.red * 0.299 + pickerColor.green * 0.587 + pickerColor.blue * 0.114));
 
                     setState(() {});

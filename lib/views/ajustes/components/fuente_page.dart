@@ -25,7 +25,7 @@ class _FuentesPageState extends State<FuentesPage> {
     'Rubik',
     'Source Sans Pro'
   ];
-  SharedPreferences? prefs;
+  // SharedPreferences? prefs;
 
   int? value;
   int? currentValue;
@@ -37,25 +37,38 @@ class _FuentesPageState extends State<FuentesPage> {
     for (int i = 0; i < fuentes.length; ++i) {
       if (TemaModel.of(context, rebuildOnChange: false).font == fuentes[i]) {
         currentValue = i;
+        value = i;
+        break;
       }
     }
 
-    SharedPreferences.getInstance().then((prefsInstance) => prefs = prefsInstance);
+    // SharedPreferences.getInstance().then((prefsInstance) => prefs = prefsInstance);
   }
 
   Widget materialLayout(BuildContext context) {
+    final tema = TemaModel.of(context);
+
     List<Widget> botones = [];
     for (int i = 0; i < fuentes.length; ++i) {
       // if (Theme.of(context).textTheme.title.fontFamily == fuentes[i]) {
       //   value = i;
       // }
       botones.add(InkWell(
-        onTap: () => setState(() => value = i),
+        onTap: () {
+          tema.setFont(fuentes[i]);
+          setState(() => value = i);
+        },
         child: Row(
           children: <Widget>[
             Radio(
               onChanged: (int? e) {
-                if (e != null) setState(() => value = e);
+                print(e);
+
+                if (e != null) {
+                  tema.setFont(fuentes[e]);
+                  setState(() => value = e);
+                }
+                ;
               },
               groupValue: value,
               value: i,
@@ -133,7 +146,7 @@ class _FuentesPageState extends State<FuentesPage> {
           onPressed: () {
             if (value != null) {
               tema.setFont(fuentes[value!]);
-              prefs!.setString('font', fuentes[value!]);
+              // prefs!.setString('font', fuentes[value!]);
             }
             setState(() {});
             Navigator.of(context).pop();

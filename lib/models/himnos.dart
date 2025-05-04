@@ -2,6 +2,7 @@ class Himno {
   int numero;
   String titulo;
   int transpose;
+  int autoScrollSpeed;
   bool favorito;
   bool descargado;
   // double initFontSize;
@@ -13,6 +14,7 @@ class Himno {
     this.favorito = false,
     this.descargado = false,
     this.transpose = 0,
+    this.autoScrollSpeed = 0,
     // required this.parrafos,
   });
 
@@ -23,7 +25,8 @@ class Himno {
         Himno(
           numero: x['id'],
           titulo: x['titulo'],
-          transpose: x['transpose'],
+          transpose: x['transpose'] ?? 0,
+          autoScrollSpeed: x['scroll_speed'] ?? 0,
         ),
       );
     }

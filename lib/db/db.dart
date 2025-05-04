@@ -102,7 +102,7 @@ class DB {
 
     await db.execute(sql, arguments);
 
-    await db.close();
+    db.close();
   }
 
   static dynamic rawQuery(String sql, {List<dynamic>? arguments}) async {
@@ -110,7 +110,7 @@ class DB {
 
     dynamic res = await db.rawQuery(sql, arguments);
 
-    await db.close();
+    db.close();
 
     return res;
   }
@@ -120,7 +120,7 @@ class DB {
 
     dynamic res = await db.rawInsert(sql, arguments);
 
-    await db.close();
+    db.close();
 
     return res;
   }
@@ -130,7 +130,7 @@ class DB {
 
     dynamic res = await db.rawDelete(sql, arguments);
 
-    await db.close();
+    db.close();
 
     return res;
   }

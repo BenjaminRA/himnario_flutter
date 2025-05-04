@@ -1,5 +1,6 @@
 import 'package:Himnario/helpers/isAndroid.dart';
 import 'package:Himnario/helpers/smallDevice.dart';
+import 'package:Himnario/models/tema.dart';
 import 'package:flutter/material.dart';
 
 class VoicesProgressBar extends StatefulWidget {
@@ -98,15 +99,7 @@ class CustomSlider extends CustomPainter {
   double progress;
   bool dragging;
   int duration;
-  Paint primaryColorPaint = Paint()
-    ..color = Colors.black
-    ..strokeWidth = 10.0;
-  Paint secondaryColorPaint = Paint()
-    ..color = Colors.grey
-    ..strokeWidth = 10.0;
   BuildContext context;
-
-  late TextPainter text;
 
   CustomSlider({
     required this.progress,
@@ -116,18 +109,6 @@ class CustomSlider extends CustomPainter {
   }) {
     duration = (duration.isNaN || duration == double.infinity) ? 0 : duration;
     progress = progress.isNaN || progress == double.infinity ? 0.0 : progress;
-    text = TextPainter(
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
-      text: TextSpan(
-        text: '${(duration * progress / 1000).floor()}s',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 40.0,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
     // primaryColorPaint = Paint()
     //   ..color = Colors.black
     //   ..strokeWidth = 10.0;
@@ -140,8 +121,35 @@ class CustomSlider extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     double currentProgress = size.width * progress;
     double position = size.height * 0.65;
+
+    final tema = TemaModel.of(context);
+    Color lineColor = tema.brightness == Brightness.dark ? Colors.white : Colors.black;
+    Color textColor = tema.brightness == Brightness.dark ? Colors.white : Colors.black;
+    Color textBackgroundColor = tema.brightness == Brightness.dark ? Colors.black : Colors.white;
+
+    TextPainter text = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        text: '${(duration * progress / 1000).floor()}s',
+        style: TextStyle(
+          color: textColor,
+          fontSize: 40.0,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+
+    Paint primaryColorPaint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 10.0;
+    Paint secondaryColorPaint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 10.0;
+
     canvas.drawLine(Offset(0.0, position), Offset(currentProgress, position), primaryColorPaint);
     canvas.drawLine(Offset(currentProgress, position), Offset(size.width, position), secondaryColorPaint);
+
     if (dragging) {
       if (!isAndroid() || smallDevice(context))
         currentProgress = currentProgress > size.width - 90.0 ? size.width - 90.0 : currentProgress;
@@ -153,7 +161,7 @@ class CustomSlider extends CustomPainter {
           Offset(currentProgress, position + 5.0),
           Offset(currentProgress, -height),
           Paint()
-            ..color = Colors.black
+            ..color = lineColor
             ..strokeWidth = 6.0);
       canvas.skew(-0.2, 0.0);
       canvas.drawOval(
@@ -162,7 +170,7 @@ class CustomSlider extends CustomPainter {
       canvas.drawOval(
           Rect.fromPoints(
               Offset(currentProgress - radius * 0.1, -(height - radius * 0.35)), Offset(currentProgress + radius * 1.1, -(height + radius * 0.65))),
-          Paint()..color = Colors.white);
+          Paint()..color = textBackgroundColor);
       canvas.skew(0.2, 0.0);
       text.layout(maxWidth: 100.0, minWidth: 100.0);
       text.paint(canvas, Offset(currentProgress + radius * -0.05, -(height + radius * 0.47)));

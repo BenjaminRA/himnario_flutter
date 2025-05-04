@@ -88,7 +88,7 @@ class _HimnosTabState extends State<HimnosTab> {
 
     return widget.categorias.isNotEmpty
         ? RefreshIndicator(
-            color: TemaModel.of(context).getAccentColor(),
+            color: tema.getScaffoldAccentColor(),
             onRefresh: widget.onRefresh,
             child: ListView.builder(
               padding: EdgeInsets.only(bottom: 80.0),
@@ -99,6 +99,7 @@ class _HimnosTabState extends State<HimnosTab> {
                         elevation: 4.0,
                         margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                        color: tema.getListTileColor(),
                         child: ListTile(
                           onTap: () {
                             Navigator.push(
@@ -113,6 +114,7 @@ class _HimnosTabState extends State<HimnosTab> {
                         elevation: 4.0,
                         margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                        color: tema.getListTileColor(),
                         child: Column(
                           children: <Widget>[
                             ListTile(
@@ -160,7 +162,6 @@ class _HimnosTabState extends State<HimnosTab> {
     final tema = ScopedModel.of<TemaModel>(context);
 
     return CupertinoPageScaffold(
-        // backgroundColor: tema.getScaffoldBackgroundColor(),
         navigationBar: CupertinoNavigationBar(
           backgroundColor: tema.getAccentColor(),
           // actionsForegroundColor: tema.getAccentColorText(),
@@ -219,19 +220,16 @@ class _HimnosTabState extends State<HimnosTab> {
                                             Navigator.push(
                                               context,
                                               CupertinoPageRoute(
-                                                builder: (BuildContext context) => ScopedModel<TemaModel>(
-                                                  model: tema,
-                                                  child: TemaPage(id: index, tema: listTiles[index].title),
-                                                ),
+                                                builder: (BuildContext context) => TemaPage(id: index, tema: listTiles[index].title),
                                               ),
                                             );
                                           },
                                           child: Text(
                                             listTiles[index].title,
-                                            style: CupertinoTheme.of(context)
-                                                .textTheme
-                                                .textStyle
-                                                .copyWith(color: tema.getScaffoldTextColor(), fontFamily: tema.font),
+                                            style: TextStyle(
+                                              color: tema.getScaffoldTextColor(),
+                                              fontFamily: tema.font,
+                                            ),
                                           ),
                                         )
                                       : Column(
@@ -243,11 +241,13 @@ class _HimnosTabState extends State<HimnosTab> {
                                                 children: <Widget>[
                                                   Align(
                                                     alignment: Alignment.center,
-                                                    child: Text(listTiles[index].title,
-                                                        style: CupertinoTheme.of(context)
-                                                            .textTheme
-                                                            .textStyle
-                                                            .copyWith(color: tema.getScaffoldTextColor(), fontFamily: tema.font)),
+                                                    child: Text(
+                                                      listTiles[index].title,
+                                                      style: TextStyle(
+                                                        color: tema.getScaffoldTextColor(),
+                                                        fontFamily: tema.font,
+                                                      ),
+                                                    ),
                                                   ),
                                                   Align(
                                                     alignment: Alignment.centerRight,
@@ -284,12 +284,12 @@ class _HimnosTabState extends State<HimnosTab> {
                                                             child: Text(
                                                               subCategoria.title,
                                                               textAlign: TextAlign.center,
-                                                              style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-                                                                    color: tema.getScaffoldTextColor(),
-                                                                    fontFamily: tema.font,
-                                                                    fontWeight: FontWeight.w400,
-                                                                    fontSize: 15.0,
-                                                                  ),
+                                                              style: TextStyle(
+                                                                color: tema.getScaffoldTextColor(),
+                                                                fontFamily: tema.font,
+                                                                fontWeight: FontWeight.w400,
+                                                                fontSize: 12.0,
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
