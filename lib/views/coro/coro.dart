@@ -671,7 +671,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                   child: Icon(
                     Icons.more_vert,
                     size: 30.0,
-                    color: _tema.getAccentColorText(),
+                    color: _tema.getAccentColorText().withOpacity(acordesDisponible ? 1.0 : 0.3),
                   ),
                 ),
               ],
