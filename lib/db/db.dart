@@ -47,6 +47,8 @@ class DB {
     List<List<int>> descargados = [];
     // transpose
     List<Himno> transposedHImnos = [];
+    // visitas
+    List<Map<String, dynamic>> visitas = [];
     if (!fistRun) {
       print('abriendo base de datos');
       try {
@@ -63,6 +65,13 @@ class DB {
         try {
           for (Map<String, dynamic> descargado in (await db.rawQuery('select * from descargados'))) {
             descargados.add([descargado['himno_id'], descargado['duracion']]);
+          }
+        } catch (e) {
+          print(e);
+        }
+        try {
+          for (Map<String, dynamic> visita in (await db.rawQuery('select * from visitas'))) {
+            visitas.add(visita);
           }
         } catch (e) {
           print(e);
@@ -86,12 +95,15 @@ class DB {
     if (!fistRun) {
       await db.execute('CREATE TABLE IF NOT EXISTS favoritos(himno_id int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
       await db.execute('CREATE TABLE IF NOT EXISTS descargados(himno_id int, duracion int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
+      await db.execute('CREATE TABLE IF NOT EXISTS visitas(himno_id int, date datetime, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
       for (int favorito in favoritos) await db.rawInsert('insert into favoritos values ($favorito)');
       for (List<int> descargado in descargados) await db.rawInsert('insert into descargados values (${descargado[0]}, ${descargado[1]})');
       for (Himno himno in transposedHImnos) await db.rawQuery('update himnos set transpose = ${himno.transpose} where id = ${himno.numero}');
+      for (Map<String, dynamic> visita in visitas) await db.rawQuery('insert into visitas values (${visita['himno_id']}, "${visita['date']}")');
     } else {
       await db.execute('CREATE TABLE IF NOT EXISTS favoritos(himno_id int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
       await db.execute('CREATE TABLE IF NOT EXISTS descargados(himno_id int, duracion int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
+      await db.execute('CREATE TABLE IF NOT EXISTS visitas(himno_id int, date datetime, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
     }
     await db.close();
     return null;

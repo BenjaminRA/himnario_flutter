@@ -146,9 +146,12 @@ class _MainPageState extends State<MainPage> with RouteAware {
           List<List<int>> descargados = [];
           // transpose
           List<Himno> transposedHImnos = [];
+          // visitas
+          List<Map<String, dynamic>> visitas = [];
 
           await DB.execute('CREATE TABLE IF NOT EXISTS favoritos(himno_id int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
           await DB.execute('CREATE TABLE IF NOT EXISTS descargados(himno_id int, duracion int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
+          await DB.execute('CREATE TABLE IF NOT EXISTS visitas(himno_id int, date datetime, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
 
           for (Map<String, dynamic> favorito in (await DB.rawQuery('select * from favoritos'))) {
             favoritos.add(favorito['himno_id']);
@@ -157,16 +160,20 @@ class _MainPageState extends State<MainPage> with RouteAware {
             descargados.add([descargado['himno_id'], descargado['duracion']]);
           }
           transposedHImnos = Himno.fromJson((await DB.rawQuery('select * from himnos where transpose != 0')));
+          for (Map<String, dynamic> visita in (await DB.rawQuery('select * from visitas'))) {
+            visitas.add(visita);
+          }
 
           File(await DB.getPath()).deleteSync();
           File(await DB.getPath()).writeAsBytesSync(request.bodyBytes);
 
           await DB.execute('CREATE TABLE IF NOT EXISTS favoritos(himno_id int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
           await DB.execute('CREATE TABLE IF NOT EXISTS descargados(himno_id int, duracion int, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
+          await DB.execute('CREATE TABLE IF NOT EXISTS visitas(himno_id int, date datetime, FOREIGN KEY (himno_id) REFERENCES himnos(id))');
           for (int favorito in favoritos) await DB.rawInsert('insert into favoritos values ($favorito)');
           for (List<int> descargado in descargados) await DB.rawInsert('insert into descargados values (${descargado[0]}, ${descargado[1]})');
           for (Himno himno in transposedHImnos) await DB.rawQuery('update himnos set transpose = ${himno.transpose} where id = ${himno.numero}');
-
+          for (Map<String, dynamic> visita in visitas) await DB.rawQuery('insert into visitas values (${visita['himno_id']}, "${visita['date']}")');
           prefs.setString('latest', latest[0]['updatedAt']);
 
           if (isAndroid()) {
@@ -539,7 +546,7 @@ class _MainPageState extends State<MainPage> with RouteAware {
         ),
         Positioned(
           left: -50.0,
-          bottom: 80.0,
+          bottom: 114.0,
           child: AnimatedContainer(
             transform: cargando ? Matrix4.translationValues(0.0, 0.0, 0.0) : Matrix4.translationValues(-50.0, 0.0, 0.0),
             curve: Curves.easeOutSine,

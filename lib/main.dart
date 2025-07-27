@@ -1,7 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:Himnario/helpers/isAndroid.dart';
 import 'package:Himnario/models/tema.dart';
 import 'package:Himnario/views/main/mainPage.dart';
