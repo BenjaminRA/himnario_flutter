@@ -13,15 +13,25 @@ class SheetsApi {
   static String _base = 'http://api-himnario-legacy.songbooksofpraise.com:8085';
 
   static Future<String> sheetAvailable(int number) async {
-    String endpoint =
-        await SharedPreferences.getInstance().then((prefs) => prefs.getString('sheet_endpoint') ?? 'partitura').catchError((_) => 'partitura');
+    String endpoint = await SharedPreferences.getInstance().then((prefs) {
+      if (prefs.getBool('dev_mode') == true) {
+        return 'partitura_con_acordes';
+      }
+
+      return 'partitura';
+    }).catchError((_) => 'partitura');
 
     return _base + '/$endpoint/$number/disponible';
   }
 
   static Future<String> getSheet(int number) async {
-    String endpoint =
-        await SharedPreferences.getInstance().then((prefs) => prefs.getString('sheet_endpoint') ?? 'partitura').catchError((_) => 'partitura');
+    String endpoint = await SharedPreferences.getInstance().then((prefs) {
+      if (prefs.getBool('dev_mode') == true) {
+        return 'partitura_con_acordes';
+      }
+
+      return 'partitura';
+    }).catchError((_) => 'partitura');
 
     return _base + '/$endpoint/$number';
   }

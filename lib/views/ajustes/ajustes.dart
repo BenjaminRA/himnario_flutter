@@ -52,6 +52,32 @@ class _AjustesPageState extends State<AjustesPage> {
     return true;
   }
 
+  Future<void> showDevModePasswordDialog(BuildContext context) async {
+    final TextEditingController passwordController = TextEditingController();
+
+    if (isAndroid()) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return _DevModePasswordDialog(
+            passwordController: passwordController,
+            isAndroid: true,
+          );
+        },
+      );
+    } else {
+      await showCupertinoDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return _DevModePasswordDialog(
+            passwordController: passwordController,
+            isAndroid: false,
+          );
+        },
+      );
+    }
+  }
+
   void downloadPartituras() async {
     String path = (await getApplicationDocumentsDirectory()).path;
     setState(() => downloaded = 0);
@@ -148,6 +174,26 @@ class _AjustesPageState extends State<AjustesPage> {
             ),
             onTap: downloaded < 517 ? downloadPartituras : null,
           ),
+          prefs?.getBool('dev_mode') == true
+              ? ListTile(
+                  leading: Icon(Icons.developer_mode),
+                  title: Text('Deshabilitar modo desarrollador'),
+                  onTap: () {
+                    SharedPreferences.getInstance().then((prefs) {
+                      setState(() {
+                        prefs.setBool('dev_mode', false);
+                      });
+                    });
+                  },
+                )
+              : ListTile(
+                  leading: Icon(Icons.developer_mode),
+                  title: Text('Habilitar modo desarrollador'),
+                  onTap: () async {
+                    await showDevModePasswordDialog(context);
+                    setState(() {});
+                  },
+                ),
         ],
       ),
     );
@@ -340,6 +386,62 @@ class _AjustesPageState extends State<AjustesPage> {
             onPressed: downloaded < 517 ? downloadPartituras : null,
             child: Row(children: botonDescarga),
           ),
+          prefs?.getBool('dev_mode') == true
+              ? CupertinoButton(
+                  onPressed: () {
+                    SharedPreferences.getInstance().then((prefs) {
+                      setState(() {
+                        prefs.setBool('dev_mode', false);
+                      });
+                    });
+                  },
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Container(),
+                      ),
+                      Icon(
+                        Icons.developer_mode,
+                        color: tema.getScaffoldTextColor(),
+                      ),
+                      SizedBox(
+                        width: 10.0,
+                      ),
+                      Text('Deshabilitar modo desarrollador',
+                          style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
+                              color: tema.getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font)),
+                      Expanded(
+                        child: Container(),
+                      ),
+                    ],
+                  ),
+                )
+              : CupertinoButton(
+                  onPressed: () async {
+                    await showDevModePasswordDialog(context);
+                    setState(() {});
+                  },
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Container(),
+                      ),
+                      Icon(
+                        Icons.developer_mode,
+                        color: tema.getScaffoldTextColor(),
+                      ),
+                      SizedBox(
+                        width: 10.0,
+                      ),
+                      Text('Habilitar modo desarrollador',
+                          style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
+                              color: tema.getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font)),
+                      Expanded(
+                        child: Container(),
+                      ),
+                    ],
+                  ),
+                ),
         ],
       ),
     );
@@ -348,5 +450,110 @@ class _AjustesPageState extends State<AjustesPage> {
   @override
   Widget build(BuildContext context) {
     return isAndroid() ? materialLayout(context) : cupertinoLayout(context);
+  }
+}
+
+class _DevModePasswordDialog extends StatefulWidget {
+  final TextEditingController passwordController;
+  final bool isAndroid;
+
+  const _DevModePasswordDialog({
+    required this.passwordController,
+    required this.isAndroid,
+  });
+
+  @override
+  _DevModePasswordDialogState createState() => _DevModePasswordDialogState();
+}
+
+class _DevModePasswordDialogState extends State<_DevModePasswordDialog> {
+  bool incorrectPassword = false;
+
+  Future<void> confirmarHandler() async {
+    if (widget.passwordController.text != 'D3VM0D3H1MN4R10') {
+      setState(() => incorrectPassword = true);
+      return;
+    }
+
+    await SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('dev_mode', true);
+    });
+
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isAndroid) {
+      return AlertDialog(
+        title: Text('Habilitar modo desarrollador'),
+        content: TextField(
+          controller: widget.passwordController,
+          obscureText: true,
+          decoration: InputDecoration(
+            labelText: 'Contraseña',
+            hintText: 'Ingrese la contraseña',
+            errorText: incorrectPassword ? 'Contraseña incorrecta' : null,
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancelar'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Confirmar'),
+            onPressed: confirmarHandler,
+          ),
+        ],
+      );
+    } else {
+      final TemaModel tema = ScopedModel.of<TemaModel>(context);
+
+      return CupertinoAlertDialog(
+        title: Text('Habilitar modo desarrollador'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (incorrectPassword)
+              Padding(
+                padding: EdgeInsets.only(top: 8.0),
+                child: Text(
+                  'Contraseña incorrecta',
+                  style: TextStyle(color: CupertinoColors.systemRed, fontSize: 13),
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.only(top: 16.0),
+              child: CupertinoTextField(
+                controller: widget.passwordController,
+                obscureText: true,
+                placeholder: 'Ingrese la contraseña',
+                cursorColor: tema.brightness == Brightness.light ? Colors.black : Colors.white,
+                style: TextStyle(
+                  color: tema.brightness == Brightness.light ? Colors.black : Colors.white,
+                  fontFamily: tema.font,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: <Widget>[
+          CupertinoDialogAction(
+            child: Text('Cancelar'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          CupertinoDialogAction(
+            child: Text('Confirmar'),
+            isDefaultAction: true,
+            onPressed: confirmarHandler,
+          ),
+        ],
+      );
+    }
   }
 }
