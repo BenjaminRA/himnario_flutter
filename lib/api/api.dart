@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 class VoicesApi {
   static String _base = 'http://api-himnario-legacy.songbooksofpraise.com:8085';
 
@@ -10,8 +12,19 @@ class VoicesApi {
 class SheetsApi {
   static String _base = 'http://api-himnario-legacy.songbooksofpraise.com:8085';
 
-  static String sheetAvailable(int number) => _base + '/partitura/$number/disponible';
-  static String getSheet(int number) => _base + '/partitura/$number';
+  static Future<String> sheetAvailable(int number) async {
+    String endpoint =
+        await SharedPreferences.getInstance().then((prefs) => prefs.getString('sheet_endpoint') ?? 'partitura').catchError((_) => 'partitura');
+
+    return _base + '/$endpoint/$number/disponible';
+  }
+
+  static Future<String> getSheet(int number) async {
+    String endpoint =
+        await SharedPreferences.getInstance().then((prefs) => prefs.getString('sheet_endpoint') ?? 'partitura').catchError((_) => 'partitura');
+
+    return _base + '/$endpoint/$number';
+  }
 }
 
 class DatabaseApi {

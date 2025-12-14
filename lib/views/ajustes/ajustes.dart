@@ -58,9 +58,9 @@ class _AjustesPageState extends State<AjustesPage> {
     for (int i = 1; i <= 517; ++i) {
       File aux = File(path + '/$i.jpg');
       if (!(await aux.exists())) {
-        http.Response res = await http.get(Uri.parse(SheetsApi.sheetAvailable(i)));
+        http.Response res = await http.get(Uri.parse(await SheetsApi.sheetAvailable(i)));
         if (res.statusCode == 200) {
-          http.get(Uri.parse(SheetsApi.getSheet(i))).then((image) async {
+          http.get(Uri.parse(await SheetsApi.getSheet(i))).then((image) async {
             await aux.writeAsBytes(image.bodyBytes);
             if (mounted) setState(() => downloaded += 1);
           });

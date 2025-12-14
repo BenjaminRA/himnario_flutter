@@ -197,19 +197,19 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
       if (await aux.exists()) {
         if (mounted) setState(() => sheetAvailable = true);
       } else {
-        http.Response res = await http.get(Uri.parse(SheetsApi.sheetAvailable(widget.numero)));
+        http.Response res = await http.get(Uri.parse(await SheetsApi.sheetAvailable(widget.numero)));
         if (res.statusCode == 200) {
           if (mounted) setState(() => sheetAvailable = true);
-          http.Response image = await http.get(Uri.parse(SheetsApi.getSheet(widget.numero)));
+          http.Response image = await http.get(Uri.parse(await SheetsApi.getSheet(widget.numero)));
           await aux.writeAsBytes(image.bodyBytes);
         }
       }
     } else {
-      http.Response res = await http.get(Uri.parse(SheetsApi.sheetAvailable(widget.numero)));
+      http.Response res = await http.get(Uri.parse(await SheetsApi.sheetAvailable(widget.numero)));
       print(res.statusCode);
       if (res.statusCode == 200) {
         if (mounted) setState(() => sheetAvailable = true);
-        http.Response image = await http.get(Uri.parse(SheetsApi.getSheet(widget.numero)));
+        http.Response image = await http.get(Uri.parse(await SheetsApi.getSheet(widget.numero)));
         await aux.writeAsBytes(image.bodyBytes);
       }
     }
