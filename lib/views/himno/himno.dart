@@ -213,11 +213,20 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
         await aux.writeAsBytes(image.bodyBytes);
       }
     }
-    if (mounted)
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool defaultSheetEnabled = prefs.getBool('default_sheet_enabled') ?? false;
+
+    if (mounted) {
       setState(() {
         sheetFile = aux;
         sheetReady = aux.existsSync();
+        // Enable sheet by default if the preference is true and sheet is available
+        if (defaultSheetEnabled && sheetAvailable) {
+          sheet = true;
+        }
       });
+    }
     return null;
   }
 

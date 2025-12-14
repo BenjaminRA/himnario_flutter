@@ -136,6 +136,58 @@ class _AjustesPageState extends State<AjustesPage> {
             },
           ),
           ListTile(
+            leading: Icon(Icons.music_note),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Entrar a partitura por defecto'),
+                Text(
+                  'Cuando esté disponible',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            trailing: Switch(
+              value: prefs?.getBool('default_sheet_enabled') ?? false,
+              onChanged: (bool value) {
+                SharedPreferences.getInstance().then((prefs) {
+                  setState(() {
+                    prefs.setBool('default_sheet_enabled', value);
+                  });
+                });
+              },
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.music_note),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Activar acordes por defecto'),
+                Text(
+                  'Cuando esté disponible',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            trailing: Switch(
+              value: prefs?.getBool('default_chords_enabled') ?? false,
+              onChanged: (bool value) {
+                SharedPreferences.getInstance().then((prefs) {
+                  setState(() {
+                    prefs.setBool('default_chords_enabled', value);
+                  });
+                });
+              },
+            ),
+          ),
+          ListTile(
             leading: downloaded == -2 || (downloaded < 517 && downloaded > -1)
                 ? SizedBox(
                     height: 25,
@@ -203,9 +255,9 @@ class _AjustesPageState extends State<AjustesPage> {
     final TemaModel tema = ScopedModel.of<TemaModel>(context, rebuildOnChange: true);
 
     List<Widget> botonDescarga = [
-      Expanded(
-        child: Container(),
-      ),
+      // Expanded(
+      //   child: Container(),
+      // ),
       downloaded == -2 || (downloaded < 517 && downloaded > -1)
           ? SizedBox(height: 24, width: 24, child: CupertinoActivityIndicator())
           : Icon(
@@ -297,9 +349,6 @@ class _AjustesPageState extends State<AjustesPage> {
             },
             child: Row(
               children: <Widget>[
-                Expanded(
-                  child: Container(),
-                ),
                 Icon(
                   Icons.color_lens,
                   color: tema.getScaffoldTextColor(),
@@ -312,9 +361,6 @@ class _AjustesPageState extends State<AjustesPage> {
                         .textTheme
                         .textStyle
                         .copyWith(color: tema.getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font)),
-                Expanded(
-                  child: Container(),
-                ),
               ],
             ),
           ),
@@ -329,9 +375,6 @@ class _AjustesPageState extends State<AjustesPage> {
             },
             child: Row(
               children: <Widget>[
-                Expanded(
-                  child: Container(),
-                ),
                 Icon(
                   Icons.text_fields,
                   color: tema.getScaffoldTextColor(),
@@ -344,9 +387,6 @@ class _AjustesPageState extends State<AjustesPage> {
                         .textTheme
                         .textStyle
                         .copyWith(color: tema.getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font)),
-                Expanded(
-                  child: Container(),
-                ),
               ],
             ),
           ),
@@ -361,9 +401,6 @@ class _AjustesPageState extends State<AjustesPage> {
             },
             child: Row(
               children: <Widget>[
-                Expanded(
-                  child: Container(),
-                ),
                 Icon(
                   Icons.format_align_center,
                   color: tema.getScaffoldTextColor(),
@@ -376,8 +413,85 @@ class _AjustesPageState extends State<AjustesPage> {
                         .textTheme
                         .textStyle
                         .copyWith(color: tema.getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font)),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  Icons.music_note,
+                  color: tema.getScaffoldTextColor(),
+                ),
+                SizedBox(
+                  width: 10.0,
+                ),
                 Expanded(
-                  child: Container(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Entrar a partitura por defecto',
+                          style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
+                              color: tema.getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font)),
+                      Text('Cuando esté disponible',
+                          style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
+                                color: tema.brightness == Brightness.dark ? CupertinoColors.systemGrey : CupertinoColors.systemGrey2,
+                                fontSize: 12,
+                                fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font,
+                              )),
+                    ],
+                  ),
+                ),
+                CupertinoSwitch(
+                  value: prefs?.getBool('default_sheet_enabled') ?? false,
+                  onChanged: (bool value) {
+                    SharedPreferences.getInstance().then((prefs) {
+                      setState(() {
+                        prefs.setBool('default_sheet_enabled', value);
+                      });
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  Icons.music_note,
+                  color: tema.getScaffoldTextColor(),
+                ),
+                SizedBox(
+                  width: 10.0,
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Activar acordes por defecto',
+                          style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
+                              color: tema.getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font)),
+                      Text('Cuando esté disponible',
+                          style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
+                                color: tema.brightness == Brightness.dark ? CupertinoColors.systemGrey : CupertinoColors.systemGrey2,
+                                fontSize: 12,
+                                fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font,
+                              )),
+                    ],
+                  ),
+                ),
+                CupertinoSwitch(
+                  value: prefs?.getBool('default_chords_enabled') ?? false,
+                  onChanged: (bool value) {
+                    SharedPreferences.getInstance().then((prefs) {
+                      setState(() {
+                        prefs.setBool('default_chords_enabled', value);
+                      });
+                    });
+                  },
                 ),
               ],
             ),
@@ -397,9 +511,6 @@ class _AjustesPageState extends State<AjustesPage> {
                   },
                   child: Row(
                     children: <Widget>[
-                      Expanded(
-                        child: Container(),
-                      ),
                       Icon(
                         Icons.developer_mode,
                         color: tema.getScaffoldTextColor(),
@@ -410,9 +521,6 @@ class _AjustesPageState extends State<AjustesPage> {
                       Text('Deshabilitar modo desarrollador',
                           style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
                               color: tema.getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font)),
-                      Expanded(
-                        child: Container(),
-                      ),
                     ],
                   ),
                 )
@@ -423,9 +531,6 @@ class _AjustesPageState extends State<AjustesPage> {
                   },
                   child: Row(
                     children: <Widget>[
-                      Expanded(
-                        child: Container(),
-                      ),
                       Icon(
                         Icons.developer_mode,
                         color: tema.getScaffoldTextColor(),
@@ -436,9 +541,6 @@ class _AjustesPageState extends State<AjustesPage> {
                       Text('Habilitar modo desarrollador',
                           style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
                               color: tema.getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font)),
-                      Expanded(
-                        child: Container(),
-                      ),
                     ],
                   ),
                 ),

@@ -85,6 +85,14 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
       }
     }
 
+    // Check if chords should be enabled by default
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool defaultChordsEnabled = prefs.getBool('default_chords_enabled') ?? false;
+    if (defaultChordsEnabled && acordesDisponible) {
+      acordes = true;
+      fontController.value = 1.0;
+    }
+
     List<Map<String, dynamic>> favoritosQuery = await DB.rawQuery('select * from favoritos where himno_id = ${widget.numero}');
     List<Map<String, dynamic>> descargadoQuery = await DB.rawQuery('select * from descargados where himno_id = ${widget.numero}');
 
