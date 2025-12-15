@@ -17,12 +17,18 @@ void main() async {
   if (['Raleway', '.SF Pro Text'].contains(font)) font = 'Merriweather';
 
   String alignment = prefs.getString('alignment') ?? 'Izquierda';
+  bool showChordsByDefault = prefs.getBool('showChordsByDefault') ?? false;
+  bool showMusicSheetByDefault = prefs.getBool('showMusicSheetByDefault') ?? false;
+  TemaNotation notation = prefs.getString('notation') == TemaNotation.Americana.toString() ? TemaNotation.Americana : TemaNotation.Internacional;
 
   TemaModel tema = TemaModel()
     ..setMainColor(mainColor != null ? Color(mainColor) : Colors.black)
     ..setFont(font)
     ..setBrightness(dark ? Brightness.dark : Brightness.light)
-    ..setAlignment(TemaAlignment.values.firstWhere((e) => e.name == alignment));
+    ..setAlignment(TemaAlignment.values.firstWhere((e) => e.name == alignment))
+    ..setNotation(notation)
+    ..setShowChordsByDefault(showChordsByDefault)
+    ..setShowMusicSheetByDefault(showMusicSheetByDefault);
 
   runApp(ScopedModel<TemaModel>(
     model: tema,
@@ -53,6 +59,23 @@ class MyApp extends StatelessWidget {
                 color: tema.getAccentColor(),
                 foregroundColor: tema.getAccentColorText(),
                 scrolledUnderElevation: 0.0,
+              ),
+              switchTheme: SwitchThemeData(
+                thumbColor: MaterialStateProperty.all(tema.getAccentColorText()),
+                trackColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(MaterialState.selected)) {
+                    return tema.getAccentColor().withOpacity(0.5);
+                  }
+                  return tema.getScaffoldTextColor().withOpacity(0.5);
+                }),
+              ),
+              checkboxTheme: CheckboxThemeData(
+                fillColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(MaterialState.selected)) {
+                    return tema.getAccentColor();
+                  }
+                  return tema.getScaffoldBackgroundColor();
+                }),
               ),
               primaryColor: tema.getAccentColor(),
               fontFamily: tema.font,

@@ -98,6 +98,8 @@ class _AjustesPageState extends State<AjustesPage> {
   }
 
   Widget materialLayout(BuildContext context) {
+    TemaModel tema = ScopedModel.of<TemaModel>(context, rebuildOnChange: true);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Ajustes'),
@@ -151,13 +153,9 @@ class _AjustesPageState extends State<AjustesPage> {
               ],
             ),
             trailing: Switch(
-              value: prefs?.getBool('default_sheet_enabled') ?? false,
+              value: tema.showMusicSheetByDefault,
               onChanged: (bool value) {
-                SharedPreferences.getInstance().then((prefs) {
-                  setState(() {
-                    prefs.setBool('default_sheet_enabled', value);
-                  });
-                });
+                tema.setShowMusicSheetByDefault(value);
               },
             ),
           ),
@@ -177,13 +175,9 @@ class _AjustesPageState extends State<AjustesPage> {
               ],
             ),
             trailing: Switch(
-              value: prefs?.getBool('default_chords_enabled') ?? false,
+              value: tema.showChordsByDefault,
               onChanged: (bool value) {
-                SharedPreferences.getInstance().then((prefs) {
-                  setState(() {
-                    prefs.setBool('default_chords_enabled', value);
-                  });
-                });
+                tema.setShowChordsByDefault(value);
               },
             ),
           ),
@@ -444,13 +438,9 @@ class _AjustesPageState extends State<AjustesPage> {
                   ),
                 ),
                 CupertinoSwitch(
-                  value: prefs?.getBool('default_sheet_enabled') ?? false,
+                  value: tema.showMusicSheetByDefault,
                   onChanged: (bool value) {
-                    SharedPreferences.getInstance().then((prefs) {
-                      setState(() {
-                        prefs.setBool('default_sheet_enabled', value);
-                      });
-                    });
+                    tema.setShowMusicSheetByDefault(value);
                   },
                 ),
               ],
@@ -484,13 +474,9 @@ class _AjustesPageState extends State<AjustesPage> {
                   ),
                 ),
                 CupertinoSwitch(
-                  value: prefs?.getBool('default_chords_enabled') ?? false,
+                  value: tema.showChordsByDefault,
                   onChanged: (bool value) {
-                    SharedPreferences.getInstance().then((prefs) {
-                      setState(() {
-                        prefs.setBool('default_chords_enabled', value);
-                      });
-                    });
+                    tema.setShowChordsByDefault(value);
                   },
                 ),
               ],

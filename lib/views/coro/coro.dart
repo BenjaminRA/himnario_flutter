@@ -86,9 +86,9 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
     }
 
     // Check if chords should be enabled by default
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool defaultChordsEnabled = prefs.getBool('default_chords_enabled') ?? false;
-    if (defaultChordsEnabled && acordesDisponible) {
+    TemaModel tema = TemaModel.of(context, rebuildOnChange: false);
+
+    if (tema.showChordsByDefault && acordesDisponible) {
       acordes = true;
       fontController.value = 1.0;
     }
@@ -656,7 +656,7 @@ class _CoroPageState extends State<CoroPage> with SingleTickerProviderStateMixin
                                       CupertinoActionSheetAction(
                                         onPressed: toggleNotation,
                                         child: Text(
-                                          'Notación ' + _tema.notation.name,
+                                          'Notación ' + (_tema.notation == TemaNotation.Americana ? 'Internacional' : 'Americana'),
                                           style: TextStyle(
                                             color: _tema.getScaffoldTextColor(),
                                           ),

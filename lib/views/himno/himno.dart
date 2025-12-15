@@ -214,15 +214,14 @@ class _HimnoPageState extends State<HimnoPage> with SingleTickerProviderStateMix
       }
     }
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool defaultSheetEnabled = prefs.getBool('default_sheet_enabled') ?? false;
-
     if (mounted) {
+      TemaModel tema = TemaModel.of(context, rebuildOnChange: false);
+
       setState(() {
         sheetFile = aux;
         sheetReady = aux.existsSync();
         // Enable sheet by default if the preference is true and sheet is available
-        if (defaultSheetEnabled && sheetAvailable) {
+        if (tema.showMusicSheetByDefault && sheetAvailable) {
           sheet = true;
         }
       });

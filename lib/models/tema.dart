@@ -17,7 +17,13 @@ class TemaModel extends Model {
   Brightness _brightness = Brightness.light;
   String _font = 'Merriweather';
   TemaAlignment _alignment = TemaAlignment.Izquierda;
+
+  // Coro page
   TemaNotation _notation = TemaNotation.Internacional;
+  bool _showChordsByDefault = false;
+
+  // Himno page
+  bool _showMusicSheetByDefault = false;
 
   Color get mainColor => _mainColor;
   Color get mainColorContrast => _mainColorContrast;
@@ -25,6 +31,8 @@ class TemaModel extends Model {
   String get font => _font;
   TemaAlignment get alignment => _alignment;
   TemaNotation get notation => _notation;
+  bool get showChordsByDefault => _showChordsByDefault;
+  bool get showMusicSheetByDefault => _showMusicSheetByDefault;
 
   static TemaModel of(BuildContext context, {bool rebuildOnChange = true}) => ScopedModel.of<TemaModel>(context, rebuildOnChange: rebuildOnChange);
 
@@ -84,6 +92,26 @@ class TemaModel extends Model {
 
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('notation', _notation.toString());
+    });
+
+    notifyListeners();
+  }
+
+  void setShowChordsByDefault(bool show) {
+    _showChordsByDefault = show;
+
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('showChordsByDefault', show);
+    });
+
+    notifyListeners();
+  }
+
+  void setShowMusicSheetByDefault(bool show) {
+    _showMusicSheetByDefault = show;
+
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('showMusicSheetByDefault', show);
     });
 
     notifyListeners();
