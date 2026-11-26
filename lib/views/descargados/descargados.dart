@@ -44,7 +44,7 @@ class _DescargadosPageState extends State<DescargadosPage> with RouteAware {
             himnos.titulo,
             himnos.transpose,
             himnos.scroll_speed,
-            favoritos.himno_id as favorito,
+            favoritos.himno_id as favorito
           FROM himnos 
           JOIN descargados ON descargados.himno_id = himnos.id 
           LEFT JOIN favoritos ON himnos.id = favoritos.himno_id

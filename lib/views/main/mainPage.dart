@@ -309,18 +309,18 @@ class _MainPageState extends State<MainPage> with RouteAware {
           Navigator.push(context, getPageRoute(AjustesPage(), tema: tema));
         },
       ),
-      MainMenuTile(
-        icon: Icon(Icons.payments),
-        title: "Donaciones",
-        onTap: () {
-          if (!isAndroid()) {
-            Navigator.of(context).pop();
-          }
+      // MainMenuTile(
+      //   icon: Icon(Icons.payments),
+      //   title: "Donaciones",
+      //   onTap: () {
+      //     if (!isAndroid()) {
+      //       Navigator.of(context).pop();
+      //     }
 
-          launch(
-              'https://www.paypal.com/donate/?business=Y9VB93FT2L67G&no_recurring=0&item_name=Ay%C3%BAdame+a+financiar+la+infraestructura+de+la+aplicaci%C3%B3n+y+a+poder+trabajar+en+nuevos+proyectos+relacionados.&currency_code=USD');
-        },
-      ),
+      //     launch(
+      //         'https://www.paypal.com/donate/?business=Y9VB93FT2L67G&no_recurring=0&item_name=Ay%C3%BAdame+a+financiar+la+infraestructura+de+la+aplicaci%C3%B3n+y+a+poder+trabajar+en+nuevos+proyectos+relacionados.&currency_code=USD');
+      //   },
+      // ),
       MainMenuTile(
         icon: Icon(Icons.feedback),
         title: "Feedback",

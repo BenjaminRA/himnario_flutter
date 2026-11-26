@@ -21,6 +21,7 @@ class AjustesPage extends StatefulWidget {
 class _AjustesPageState extends State<AjustesPage> {
   SharedPreferences? prefs;
   int downloaded = -1;
+  double fileSize = 0.0;
 
   @override
   void initState() {
@@ -48,7 +49,10 @@ class _AjustesPageState extends State<AjustesPage> {
       if (!(await aux.exists())) {
         return false;
       }
+
+      fileSize += aux.lengthSync() / 1024 / 1024;
     }
+
     return true;
   }
 
@@ -88,11 +92,19 @@ class _AjustesPageState extends State<AjustesPage> {
         if (res.statusCode == 200) {
           http.get(Uri.parse(await SheetsApi.getSheet(i))).then((image) async {
             await aux.writeAsBytes(image.bodyBytes);
-            if (mounted) setState(() => downloaded += 1);
+            if (mounted)
+              setState(() {
+                downloaded += 1;
+                fileSize += aux.lengthSync() / 1024 / 1024;
+              });
           });
         }
       } else {
-        if (mounted) setState(() => downloaded += 1);
+        if (mounted)
+          setState(() {
+            downloaded += 1;
+            fileSize += aux.lengthSync() / 1024 / 1024;
+          });
       }
     }
   }
@@ -196,9 +208,10 @@ class _AjustesPageState extends State<AjustesPage> {
                 : downloaded <= -1
                     ? 'Descargar todas las partituras'
                     : 'Partituras ya descargadas'),
+            subtitle: fileSize > 0 ? Text('Espacio utilizado: ${fileSize.toStringAsFixed(2)} MB') : null,
             trailing: SizedBox(
-              height: 30,
-              width: 30,
+              height: 35,
+              width: 35,
               child: downloaded < 517 && downloaded != -1 && downloaded != -2
                   ? Stack(
                       children: <Widget>[
@@ -211,12 +224,34 @@ class _AjustesPageState extends State<AjustesPage> {
                           alignment: Alignment.center,
                           child: Text(
                             '${(downloaded / 517 * 100).floor()}%',
-                            textScaleFactor: 0.5,
+                            textScaleFactor: 0.9,
                           ),
                         ),
                       ],
                     )
-                  : null,
+                  : downloaded == 517
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                          ),
+                          onPressed: downloaded == 517
+                              ? () async {
+                                  String path = (await getApplicationDocumentsDirectory()).path;
+                                  for (int i = 1; i <= 517; ++i) {
+                                    File aux = File(path + '/$i.jpg');
+                                    if (await aux.exists()) {
+                                      await aux.delete();
+                                    }
+                                  }
+                                  setState(() {
+                                    downloaded = -1;
+                                    fileSize = 0.0;
+                                  });
+                                }
+                              : null,
+                        )
+                      : null,
             ),
             onTap: downloaded < 517 ? downloadPartituras : null,
           ),
@@ -261,22 +296,40 @@ class _AjustesPageState extends State<AjustesPage> {
       SizedBox(
         width: 10.0,
       ),
-      Text(
-          (downloaded < 517 && downloaded > -1)
-              ? 'Descargando partituras'
-              : downloaded <= -1
-                  ? 'Descargar todas las partituras'
-                  : 'Partituras ya descargadas',
-          style: CupertinoTheme.of(context)
-              .textTheme
-              .textStyle
-              .copyWith(color: tema.getScaffoldTextColor(), fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font)),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            (downloaded < 517 && downloaded > -1)
+                ? 'Descargando partituras'
+                : downloaded <= -1
+                    ? 'Descargar todas las partituras'
+                    : 'Partituras ya descargadas',
+            style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
+                  color: tema.getScaffoldTextColor(),
+                  fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font,
+                ),
+          ),
+          if (fileSize > 0)
+            Text(
+              'Espacio utilizado: ${fileSize.toStringAsFixed(2)} MB',
+              style: CupertinoTheme.of(context).textTheme.textStyle.copyWith(
+                    color: tema.brightness == Brightness.dark ? CupertinoColors.systemGrey : CupertinoColors.systemGrey2,
+                    fontSize: 12,
+                    fontFamily: ScopedModel.of<TemaModel>(context, rebuildOnChange: true).font,
+                  ),
+            )
+        ],
+      )
     ];
 
     if (downloaded < 517 && downloaded != -1 && downloaded != -2) {
       botonDescarga.addAll([
+        Expanded(
+          child: Container(),
+        ),
         Padding(
-          padding: EdgeInsets.only(left: 20.0),
+          padding: EdgeInsets.only(right: 20.0),
           child: SizedBox(
             height: 20,
             width: 20,
@@ -288,12 +341,13 @@ class _AjustesPageState extends State<AjustesPage> {
                 //   valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
                 // ),
                 Align(
-                    alignment: Alignment.bottomCenter,
-                    child: LinearProgressIndicator(
-                      value: downloaded / 517,
-                      backgroundColor: Colors.grey[400],
-                      valueColor: AlwaysStoppedAnimation<Color>(tema.getScaffoldTextColor()),
-                    )),
+                  alignment: Alignment.bottomCenter,
+                  child: LinearProgressIndicator(
+                    value: downloaded / 517,
+                    backgroundColor: Colors.grey[400],
+                    valueColor: AlwaysStoppedAnimation<Color>(tema.getScaffoldTextColor()),
+                  ),
+                ),
                 Align(
                   alignment: Alignment.topCenter,
                   child: Text('${(downloaded / 517 * 100).floor()}%',
@@ -307,16 +361,35 @@ class _AjustesPageState extends State<AjustesPage> {
             ),
           ),
         ),
-        Expanded(
-          child: Container(),
-        ),
       ]);
     } else {
-      botonDescarga.add(
+      botonDescarga.addAll([
         Expanded(
           child: Container(),
         ),
-      );
+        if (downloaded == 517)
+          // Delete button
+          CupertinoButton(
+            padding: EdgeInsets.only(right: 16.0),
+            child: Icon(
+              Icons.delete,
+              color: Colors.red,
+            ),
+            onPressed: () async {
+              String path = (await getApplicationDocumentsDirectory()).path;
+              for (int i = 1; i <= 517; ++i) {
+                File aux = File(path + '/$i.jpg');
+                if (await aux.exists()) {
+                  await aux.delete();
+                }
+              }
+              setState(() {
+                downloaded = -1;
+                fileSize = 0.0;
+              });
+            },
+          )
+      ]);
     }
 
     return CupertinoPageScaffold(
